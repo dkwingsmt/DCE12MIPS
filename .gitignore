@@ -1,10 +1,12 @@
 CMakeCache.txt
-CMakeFiles
-Makefile
+CMakeFiles/
+debug/
+release/
 cmake_install.cmake
 install_manifest.txt
 *~
+*.[oa]
 *.swp
 *.gch
-*.o
-*.a
+*.lxt
+*.out
