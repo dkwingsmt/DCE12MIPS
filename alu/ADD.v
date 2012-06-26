@@ -11,7 +11,7 @@ module ADD(A,B,Sign,S,Z,V,N);
     output reg V;
     output reg N;
 
-    reg [31:0] tempA,tempB,tempS;
+    reg [31:0] tempA,tempB;
 
     always@(*)
     begin

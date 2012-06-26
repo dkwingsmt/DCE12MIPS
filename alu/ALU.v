@@ -40,6 +40,16 @@ module ALU( iA, iB, iALUFun, iSign, oS, oZ, oV, oN);
             ADD ADD1(.A(iA), .B(iB), .Sign(iSign), .S(oS),
                         .Z(oZ), .V(oV), .N(oN));
         end
+        `SUB:
+        begin
+            SUB SUB1(.A(iA), .B(iB), .Sign(iSign), .S(oS),
+                        .Z(oZ), .V(oV), .N(oN));
+        end
+        `AND:
+        begin
+            AND AND1(.A(iA), .B(iB), .Sign(iSign), .S(oS)
+                     .Z(oZ), .V(oV), .N(oN));
+        end
         default:
         begin
             oS <= 0;
