@@ -6,12 +6,12 @@ item:
 .globl main
 
 main:
-addi $t1,$0,11
-addi $t2,$0,11
-beq $t1,$t2,test
-addi $v1,$0,2
+addi $1,$0,11
+addi $2,$0,11
+beq $1,$2,test
+addi $3,$0,2
 
 
 test:
-addi $v1,$0,5
+addi $3,$0,5
 
