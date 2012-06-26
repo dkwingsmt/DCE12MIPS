@@ -31,12 +31,74 @@
 module singcyc_alu_ctrl(iAluOp,
                         iFunct,
                         oAluCtrl)
+    input       [1:0]   iAluOp;
+    input       [5:0]   iFunct;
+    output  reg [5:0]   oAluCtrl;
+ADD 000000
+SUB 000001
+AND 011000
+OR 011110
+XOR 010110
+NOR 010001
+"A" 011010
+S=A
+ç§»ä½è¿ç®
+SLL
+100000
+S=B>>A[4:0]
+SRL
+100001
+S=B<<A[4:0]
+SRA
+100011
+S=B<<a[4:0] ç®æ¯ç§»ä½
+å³ç³»è¿ç®
+EQ
+110011
+If(A==B) S=1 else S=0
+NEQ
+110001
+If(A!=B) S=1 else S=0
+LT
+110101
+If(A<B) S=1 else S=0
+LEZ
+111101
+If(A<=0) S=1 else S=0
+GEZ
+111001
+If(A>=0) S=1 else S=0
+GTZ
+111111
+
+    always @(CtrlSrc)
+    begin
+        case(iAluOp)
+        2'b00:
+            oAluCtrl <= 4'b0010;
+        2'b01:
+            oAluCtrl <= 4'b0110;
+        2'b10: begin
+            casex (iFunct)
+            6'bxx0000:  oAluCtrl <= 4'b0010;
+            6'bxx0010:  oAluCtrl <= 4'b0110;
+            6'bxx1010:  oAluCtrl <= 4'b0010;
+            endcase
+        end
+        2'b11: begin
+            casex (iFunct)
+            6'bxx0000:  oAluCtrl <= 4'b0010;
+            6'bxx0010:  oAluCtrl <= 4'b0110;
+            6'bxx1010:  oAluCtrl <= 4'b0010;
+            endcase
+        end
+    end
 endmodule
 
 module singcyc_ctrl_unit(   iOpCode,
                             oRegDst,     
                             oJump,       
-                          U  oBranch,
+                            oBranch,
                             oBranchEq,
                             oMemRead,
                             oMemWrite,
@@ -46,7 +108,7 @@ module singcyc_ctrl_unit(   iOpCode,
                             oALUOp)
 
     input               iOpCode;
-    output  reg         oRegDst,     
+    output  reg         oRegDst,     // 
     output  reg         oJump,       
     output  reg         oBranch,
     output  reg         oBranchEq,
@@ -60,55 +122,55 @@ module singcyc_ctrl_unit(   iOpCode,
     always @(iOpCode)
     begin
         case(iOpCode)
-        OPCODE_RSTYLE: begin
+        `OPCODE_RSTYLE: begin
             oRegDst <= 1'b1;    oJump <= 1'b0;      oBranch <= 1'b0;   
             oBranchEq <= 1'bx;  oMemRead <= 1'b0;   oMemWrite <= 1'b0;
             oMemtoReg <= 1'b0;  oRegWrite <= 1'b1;  oALUSrc <= 1'b0;
             oALUOp <= 2'b10;
         end
-        OPCODE_LW: begin
+        `OPCODE_LW: begin
             oRegDst <= 1'b0;    oJump <= 1'b0;      oBranch <= 1'b0;   
             oBranchEq <= 1'bx;  oMemRead <= 1'b1;   oMemWrite <= 1'b0;
             oMemtoReg <= 1'b1;  oRegWrite <= 1'b1;  oALUSrc <= 1'b1;
             oALUOp <= 2'b00;
         end
-        OPCODE_SW: begin
+        `OPCODE_SW: begin
             oRegDst <= 1'bx;    oJump <= 1'b0;      oBranch <= 1'b0;   
             oBranchEq <= 1'bx;  oMemRead <= 1'b0;   oMemWrite <= 1'b1;
             oMemtoReg <= 1'bx;  oRegWrite <= 1'b0;  oALUSrc <= 1'b1;
             oALUOp <= 2'b00;
         end
-        OPCODE_LUI: begin
+        `OPCODE_LUI: begin
         end
-        OPCODE_ADDI: begin
+        `OPCODE_ADDI: begin
         end
-        OPCODE_ADDIU: begin
+        `OPCODE_ADDIU: begin
         end
-        OPCODE_ANDI: begin
+        `OPCODE_ANDI: begin
         end
-        OPCODE_SLTI: begin
+        `OPCODE_SLTI: begin
         end
-        OPCODE_SLTIU: begin
+        `OPCODE_SLTIU: begin
         end
-        OPCODE_BEQ: begin
+        `OPCODE_BEQ: begin
             oRegDst <= 1'bx;    oJump <= 1'b0;      oBranch <= 1'b1;   
             oBranchEq <= 1'b1;  oMemRead <= 1'b0;   oMemWrite <= 1'b0;
             oMemtoReg <= 1'bx;  oRegWrite <= 1'b0;  oALUSrc <= 1'b0;
             oALUOp <= 2'b01;
         end
-        OPCODE_BNE: begin
+        `OPCODE_BNE: begin
             oRegDst <= 1'bx;    oJump <= 1'b0;      oBranch <= 1'b1;   
             oBranchEq <= 1'b0;  oMemRead <= 1'b0;   oMemWrite <= 1'b0;
             oMemtoReg <= 1'bx;  oRegWrite <= 1'b0;  oALUSrc <= 1'b0;
             oALUOp <= 2'b01;
         end
-        OPCODE_J: begin
+        `OPCODE_J: begin
             oRegDst <= 1'bx;    oJump <= 1'b0;      oBranch <= 1'b1;   
             oBranchEq <= 1'b1;  oMemRead <= 1'b0;   oMemWrite <= 1'b0;
             oMemtoReg <= 1'bx;  oRegWrite <= 1'b0;  oALUSrc <= 1'b0;
             oALUOp <= 2'b01;
         end
-        OPCODE_JAL: begin
+        `OPCODE_JAL: begin
         end
         default: begin
             oRegDst <= 1'bx;    oJump <= 1'b0;      oBranch <= 1'b0;   
