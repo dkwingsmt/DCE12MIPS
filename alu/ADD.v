@@ -21,7 +21,7 @@ module ADD(A,B,Sign,S,Z,V,N);
             N <= 0;
             if (S == 0) Z = 1;
             else Z <= 0;
-            if ((S < A) | (S < B)) V <= 1;
+            if ((S < A) || (S < B)) V <= 1;
             else V <= 0;
         end
         else

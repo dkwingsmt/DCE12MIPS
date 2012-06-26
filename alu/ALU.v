@@ -70,6 +70,21 @@ module ALU( iA, iB, iALUFun, iSign, oS, oZ, oV, oN);
             STA STA1(.A(iA), .B(iB), .Sign(iSign), .S(oS)
                      .Z(oZ), .V(oV), .N(oN));
         end
+        `SLL:
+        begin
+            SLL SLL1(.A(iA), .B(iB), .Sign(iSign), .S(oS)
+                     .Z(oZ), .V(oV), .N(oN));
+        end
+        `SRL:
+        begin
+            SRL SRL1(.A(iA), .B(iB), .Sign(iSign), .S(oS)
+                     .Z(oZ), .V(oV), .N(oN));
+        end
+        `SRA:
+        begin
+            SRA SRA1(.A(iA), .B(iB), .Sign(iSign), .S(oS)
+                     .Z(oZ), .V(oV), .N(oN));
+        end
         `EQ:
         begin
             EQ EQ1(.A(iA), .B(iB), .Sign(iSign), .S(oS)
