@@ -1,0 +1,2 @@
+RAMDATA[0] <= 32'h0;
+RAMDATA[1] <= 32'h0;
