@@ -20,7 +20,7 @@ module DataMem (reset_n,clk,rd,wr,addr,wdata,rdata,accessable);
         if(~reset_n)
         begin
             `define RAM RAMDATA;
-            `include "DataMemInit.v"
+            `include "../peripheral/DataMemInit.v"
         end
         else
         begin

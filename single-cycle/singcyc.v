@@ -19,4 +19,26 @@ module singcyc(iClk,
                           .wdata(DataMemWrData),
                           .rdata(DataMemRdData),
                           .accessable(DataMemAccssable));
+
+    reg     [31:0]  RomAddr;
+    wire    [31:0]  RomRdData;
+    wire            RomAccessable;
+    ROM rom_inst(.addr(RomAddr),
+                 .data(RomRdData),
+                 .accessable(RomAccessable));
+
+    wire            _PCLoad;
+    wire    [31:0]  _PCLoadData;
+    assign _PCLoad = 1'b0;
+    singcyc_core core_inst(.iClk(iClk),
+                           .iRst_n(iRst_n), 
+                           .oRdInstAddr(RomAddr), 
+                           .iRdInst(RomRdData), 
+                           .oRdWrMemAddr(DataMemAddr), 
+                           .oMemWrite(DataMemWr), 
+                           .oMemRead(DataMemRd), 
+                           .oWrData(DataMemWrData), 
+                           .iRdData(DataMemRdData),
+                           ._iPCLoad(_PCLoad),
+                           ._iPCLoadData(_PCLoadData));
 endmodule

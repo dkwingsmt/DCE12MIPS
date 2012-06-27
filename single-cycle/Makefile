@@ -11,7 +11,12 @@ WAVEFILE_POSTFIX = .lxt
 
 ######################################################################
 # Project settings
-VERILOG_SRCFILE = testbench.v singcyc.v ../alu/ALU.v
+PERIDIR = ../peripheral/
+ALUDIR = ../alu/
+VERILOG_SRCFILE = testbench.v singcyc.v \
+				  $(PERIDIR)rom.v \
+				  $(PERIDIR)DataMem.v \
+				  $(ALUDIR)*.v
 VERILOG_DEPEND = tb1.v
 COMPILE_DST = v.out
 SIMULATE_OUTPUT = v.lxt

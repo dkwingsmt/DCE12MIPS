@@ -25,7 +25,7 @@ module ROM (addr,data,accessable);
             begin
                 accessable <= 1'b1;
                 case(addr[15:2])
-                    `include "InstRom.v"
+                    `include "../peripheral/InstRom.v"
                     default: accessable <= 1'b0;
                 endcase
             end

@@ -12,25 +12,25 @@ module ALU( iA, iB, iALUFun, iSign, oS, oZ, oV, oN);
     output oV;
     output oN;
 
-    `define ADD (6b'000000)
-    `define SUB (6b'000001)
-
-    `define AND (6b'011000)
-    `define OR  (6b'011110)
-    `define XOR (6b'010110)
-    `define NOR (6b'010001)
-    `define STA (6b'011010)
-
-    `define SLL (6b'100000)
-    `define SRL (6b'100001)
-    `define SRA (6b'100011)
-
-    `define EQ  (6b'110011)
-    `define NEQ (6b'110001)
-    `define LT  (6b'110101)
-    `define LEZ (6b'111101)
-    `define GEZ (6b'111001)
-    `define GTZ (6b'111111)
+    `define ADD (6'b000000)
+    `define SUB (6'b000001)
+                   
+    `define AND (6'b011000)
+    `define OR  (6'b011110)
+    `define XOR (6'b010110)
+    `define NOR (6'b010001)
+    `define STA (6'b011010)
+                   
+    `define SLL (6'b100000)
+    `define SRL (6'b100001)
+    `define SRA (6'b100011)
+                   
+    `define EQ  (6'b110011)
+    `define NEQ (6'b110001)
+    `define LT  (6'b110101)
+    `define LEZ (6'b111101)
+    `define GEZ (6'b111001)
+    `define GTZ (6'b111111)
 
     always@(*)
     begin
