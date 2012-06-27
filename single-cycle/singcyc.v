@@ -28,70 +28,63 @@
 `define  FUNCT_JR           6'h08;
 `define  FUNCT_JALR         6'h09;
 
+`define ALUCTRL_ADD     6'b000000
+`define ALUCTRL_SUB     6'b000001
+`define ALUCTRL_AND     6'b011000
+`define ALUCTRL_OR      6'b011110
+`define ALUCTRL_XOR     6'b010110
+`define ALUCTRL_NOR     6'b010001
+`define ALUCTRL_A       6'b011010
+`define ALUCTRL_SLL     6'b100000
+`define ALUCTRL_SRL     6'b100001
+`define ALUCTRL_SRA     6'b100011
+`define ALUCTRL_EQ      6'b110011
+`define ALUCTRL_NEQ     6'b110001
+`define ALUCTRL_LT      6'b110101
+`define ALUCTRL_LEZ     6'b111101
+`define ALUCTRL_GEZ     6'b111001
+`define ALUCTRL_GTZ     6'b111111
+
 module singcyc_alu_ctrl(iAluOp,
                         iFunct,
-                        oAluCtrl)
+                        oAluCtrl, 
+                        oSign);
+
     input       [1:0]   iAluOp;
     input       [5:0]   iFunct;
     output  reg [5:0]   oAluCtrl;
-ADD 000000
-SUB 000001
-AND 011000
-OR 011110
-XOR 010110
-NOR 010001
-"A" 011010
-S=A
-ç§»ä½è¿ç®
-SLL
-100000
-S=B>>A[4:0]
-SRL
-100001
-S=B<<A[4:0]
-SRA
-100011
-S=B<<a[4:0] ç®æ¯ç§»ä½
-å³ç³»è¿ç®
-EQ
-110011
-If(A==B) S=1 else S=0
-NEQ
-110001
-If(A!=B) S=1 else S=0
-LT
-110101
-If(A<B) S=1 else S=0
-LEZ
-111101
-If(A<=0) S=1 else S=0
-GEZ
-111001
-If(A>=0) S=1 else S=0
-GTZ
-111111
+    output  reg         oSign;
 
     always @(CtrlSrc)
     begin
         case(iAluOp)
-        2'b00:
-            oAluCtrl <= 4'b0010;
-        2'b01:
-            oAluCtrl <= 4'b0110;
-        2'b10: begin
-            casex (iFunct)
-            6'bxx0000:  oAluCtrl <= 4'b0010;
-            6'bxx0010:  oAluCtrl <= 4'b0110;
-            6'bxx1010:  oAluCtrl <= 4'b0010;
-            endcase
+        2'b00: begin
+            oAluCtrl <= `ALUCTRL_ADD;
+            oSign <= 1'b0;
         end
-        2'b11: begin
-            casex (iFunct)
-            6'bxx0000:  oAluCtrl <= 4'b0010;
-            6'bxx0010:  oAluCtrl <= 4'b0110;
-            6'bxx1010:  oAluCtrl <= 4'b0010;
-            endcase
+        2'b01: begin
+            oAluCtrl <= `ALUCTRL_SUB;
+            oSign <= 1'b0;
         end
+        default: begin
+            oSign <= 1'bx;
+            case (iFunct)
+            FUNCT_ADD:  begin oAluCtrl <= `ALUCTRL_ADD;  oSign <= 1'b1; end
+            FUNCT_ADDU: begin oAluCtrl <= `ALUCTRL_ADD;  oSign <= 1'b0; end
+            FUNCT_SUB:  begin oAluCtrl <= `ALUCTRL_SUB;  oSign <= 1'b1; end
+            FUNCT_SUBU: begin oAluCtrl <= `ALUCTRL_SUB;  oSign <= 1'b0; end
+            FUNCT_AND:  oAluCtrl <= `ALUCTRL_AND;
+            FUNCT_OR:   oAluCtrl <= `ALUCTRL_OR;
+            FUNCT_XOR:  oAluCtrl <= `ALUCTRL_XOR;
+            FUNCT_NOR:  oAluCtrl <= `ALUCTRL_NOR;
+            FUNCT_SLL:  oAluCtrl <= `ALUCTRL_SLL;
+            FUNCT_SRL:  oAluCtrl <= `ALUCTRL_SRL;
+            FUNCT_SRA:  oAluCtrl <= `ALUCTRL_SRA;
+            FUNCT_SLT:  oAluCtrl <= `ALUCTRL_LT;
+            default:    oAluCtrl <= 6'bxxxxxx;
+            endcase
+            end
+        endcase
     end
 endmodule
 
@@ -104,79 +97,69 @@ module singcyc_ctrl_unit(   iOpCode,
                             oMemWrite,
                             oMemtoReg,
                             oRegWrite,
+                            oLink,
                             oALUSrc,
-                            oALUOp)
+                            oALUOp);
 
+    // Desc: "xxx:yyy" means "Use xxx for 1, yyy for 0"
     input               iOpCode;
-    output  reg         oRegDst,     // 
-    output  reg         oJump,       
-    output  reg         oBranch,
-    output  reg         oBranchEq,
-    output  reg         oMemRead,
-    output  reg         oMemWrite,
-    output  reg         oMemtoReg,
-    output  reg         oRegWrite,
-    output  reg         oALUSrc,
-    output  reg [1:0]   oALUOp;
+    output  reg         oRegDst;    // Id of write dst reg from (rd : rt) if write
+    output  reg         oJump;      // Do jump if !branch : N/A
+    output  reg         oBranch;    // Try branch : N/A
+    output  reg         oBranchEq;  // Do branch if (A == B : A != B) if branch
+    output  reg         oMemRead;   // Read data mem : N/A
+    output  reg         oMemWrite;  // Write data mem : N/A
+    output  reg         oMemtoReg;  // Data to write to reg from (mem : ALU) if write
+    output  reg         oRegWrite;  // Do reg-write : N/A
+    output  reg         oALUSrc;    // AluOpand2 from (InstImm : RegRead2)
+    output  reg [1:0]   oALUOp;     // See singcyc_alu_ctrl
 
     always @(iOpCode)
     begin
+        // Default: 
+        // Undefined ALU behaviour. No jump, no branch.
+        // No memread/write, no regwrite.
+            oJump <= 1'bx;      oBranch <= 1'b0;    oBranchEq <= 1'bx;  
+            oALUSrc <= 1'bx;    oALUOp <= 2'bxx;
+            oRegWrite <= 1'b0;  oRegDst <= 1'bx;    oMemtoReg <= 1'bx;    
+            oMemRead <= 1'b0;   oMemWrite <= 1'b0;
+
         case(iOpCode)
-        `OPCODE_RSTYLE: begin
-            oRegDst <= 1'b1;    oJump <= 1'b0;      oBranch <= 1'b0;   
-            oBranchEq <= 1'bx;  oMemRead <= 1'b0;   oMemWrite <= 1'b0;
-            oMemtoReg <= 1'b0;  oRegWrite <= 1'b1;  oALUSrc <= 1'b0;
-            oALUOp <= 2'b10;
+        OPCODE_RSTYLE: begin
+            oRegDst <= 1'b1;    oRegWrite <= 1'b1;  
+            oALUSrc <= 1'b0;    oALUOp <= 2'b10;
         end
-        `OPCODE_LW: begin
-            oRegDst <= 1'b0;    oJump <= 1'b0;      oBranch <= 1'b0;   
-            oBranchEq <= 1'bx;  oMemRead <= 1'b1;   oMemWrite <= 1'b0;
-            oMemtoReg <= 1'b1;  oRegWrite <= 1'b1;  oALUSrc <= 1'b1;
-            oALUOp <= 2'b00;
+        OPCODE_LW: begin
+            oRegDst <= 1'b0;    oMemRead <= 1'b1;  oMemtoReg <= 1'b1;  
+            oRegWrite <= 1'b1;  oALUSrc <= 1'b1;   oALUOp <= 2'b00;
         end
-        `OPCODE_SW: begin
-            oRegDst <= 1'bx;    oJump <= 1'b0;      oBranch <= 1'b0;   
-            oBranchEq <= 1'bx;  oMemRead <= 1'b0;   oMemWrite <= 1'b1;
-            oMemtoReg <= 1'bx;  oRegWrite <= 1'b0;  oALUSrc <= 1'b1;
-            oALUOp <= 2'b00;
+        OPCODE_SW: begin
+            oMemWrite <= 1'b1;  oALUSrc <= 1'b1;   oALUOp <= 2'b00;
         end
-        `OPCODE_LUI: begin
+        OPCODE_LUI: begin
         end
-        `OPCODE_ADDI: begin
+        OPCODE_ADDI: begin
         end
-        `OPCODE_ADDIU: begin
+        OPCODE_ADDIU: begin
         end
-        `OPCODE_ANDI: begin
+        OPCODE_ANDI: begin
         end
-        `OPCODE_SLTI: begin
+        OPCODE_SLTI: begin
         end
-        `OPCODE_SLTIU: begin
+        OPCODE_SLTIU: begin
         end
-        `OPCODE_BEQ: begin
-            oRegDst <= 1'bx;    oJump <= 1'b0;      oBranch <= 1'b1;   
-            oBranchEq <= 1'b1;  oMemRead <= 1'b0;   oMemWrite <= 1'b0;
-            oMemtoReg <= 1'bx;  oRegWrite <= 1'b0;  oALUSrc <= 1'b0;
-            oALUOp <= 2'b01;
+        OPCODE_BEQ: begin
+            oBranch <= 1'b0;    oBranchEq <= 1'b1;  
+            oALUSrc <= 1'b0;    oALUOp <= 2'b01;
         end
-        `OPCODE_BNE: begin
-            oRegDst <= 1'bx;    oJump <= 1'b0;      oBranch <= 1'b1;   
-            oBranchEq <= 1'b0;  oMemRead <= 1'b0;   oMemWrite <= 1'b0;
-            oMemtoReg <= 1'bx;  oRegWrite <= 1'b0;  oALUSrc <= 1'b0;
-            oALUOp <= 2'b01;
+        OPCODE_BNE: begin
+            oBranch <= 1'b0;    oBranchEq <= 1'b0;  
+            oALUSrc <= 1'b0;    oALUOp <= 2'b01;
         end
-        `OPCODE_J: begin
-            oRegDst <= 1'bx;    oJump <= 1'b0;      oBranch <= 1'b1;   
-            oBranchEq <= 1'b1;  oMemRead <= 1'b0;   oMemWrite <= 1'b0;
-            oMemtoReg <= 1'bx;  oRegWrite <= 1'b0;  oALUSrc <= 1'b0;
-            oALUOp <= 2'b01;
+        OPCODE_J: begin
+            oJump <= 1'b1;
         end
-        `OPCODE_JAL: begin
-        end
-        default: begin
-            oRegDst <= 1'bx;    oJump <= 1'b0;      oBranch <= 1'b0;   
-            oBranchEq <= 1'bx;  oMemRead <= 1'b0;   oMemWrite <= 1'b0;
-            oMemtoReg <= 1'bx;  oRegWrite <= 1'b0;  oALUSrc <= 1'bx;
-            oALUOp <= 2'bxx;
+        OPCODE_JAL: begin
         end
         endcase
     end
@@ -191,7 +174,7 @@ module singcyc_core(iClk,
                     oMemWrite, 
                     oMemRead, 
                     oWrData, 
-                    iRdData)
+                    iRdData);
 
     //====== Input/Output ======
     input               iClk;
@@ -228,8 +211,11 @@ module singcyc_core(iClk,
     wire    [31:0]  AluIn0;
     wire    [31:0]  AluIn1;
     wire    [31:0]  AluOut;
+    wire            AluSign;
+    wire    [5:0]   AluCtrl;
     wire            AluZero;
-    wire    [3:0]   AluFunct;
+    wire            AluOverflow;
+    wire            AluNegative;
 
     //====== Control unit ======
     wire            CtrlRegDst;     
@@ -261,8 +247,8 @@ module singcyc_core(iClk,
     assign InstImmediate = iRdInst[15:0];
     assign InstJumpAddr  = iRdInst[25:0];
 
-    assign IStyleAluSrc1 = {{16{InstImmediate[15]}, InstImmediate};
-    assign PCBranchOffset = {{14{InstImmediate[15]}, InstImmediate, 2'b00};
+    assign IStyleAluSrc1 = {{16{InstImmediate[15]}}, InstImmediate};
+    assign PCBranchOffset = {{14{InstImmediate[15]}}, InstImmediate, 2'b00};
     assign PCJumpTgt = {PCAddFour[31:28], InstJumpAddr, 2'b00};
 
     RegFile reg_inst(
@@ -292,7 +278,8 @@ module singcyc_core(iClk,
     singcyc_alu_ctrl alu_ctrl_inst(
         .iAluOp(CtrlALUOp),
         .iFunct(InstFunct),
-        .oAluCtrl(AluFunct));
+        .oAluCtrl(AluCtrl),
+        .oSign(AluSign));
 
     add32b add32b_inst_PC_add_four(
         .iA(PC),
@@ -304,12 +291,15 @@ module singcyc_core(iClk,
         .iB(PCBranchOffset),
         .oS(PCBranchTgt));
 
-    alu alu_inst(
+    ALU alu_inst(
         .iA(AluIn0),
         .iB(AluIn1),
-        .iS(AluOut),
-        .iFunct(AluFunct),
-        .Z(AluZero));
+        .iALUFun(AluCtrl),
+        .iSign(AluSign),
+        .oS(AluOut),
+        .oZ(AluZero),
+        .oV(ALUOverflow)
+        .oN(ALUNegative));
 
     assign RdRegId0 = InstRs;
     assign RdRegId1 = InstRt;
@@ -318,7 +308,7 @@ module singcyc_core(iClk,
     assign RegWrite = CtrlRegWrite;
 
     assign AluIn0 = RdRegData0;
-    assign AluIn1 = CtrlALUSrc : IStyleAluSrc1 ? RdRegId1;
+    assign AluIn1 = CtrlALUSrc ? IStyleAluSrc1 : RdRegId1;
     assign DoBranch = CtrlBranch & ~(CtrlBranchEq ^ AluZero);
 
     assign oRdWrMemAddr = AluOut;
