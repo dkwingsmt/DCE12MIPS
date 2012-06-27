@@ -174,7 +174,9 @@ module singcyc_core(iClk,
                     oMemWrite, 
                     oMemRead, 
                     oWrData, 
-                    iRdData);
+                    iRdData,
+                    _iPCLoad,
+                    _iPCLoadData);
 
     //====== Input/Output ======
     input               iClk;
@@ -186,6 +188,8 @@ module singcyc_core(iClk,
     output              oMemRead;
     output      [31:0]  oWrData;
     input       [31:0]  iRdData;
+    input               _iPCLoad;
+    input       [31:0]  _iPCLoadData;
 
     //====== Essential ======
     reg     [31:0]  PC;
@@ -328,7 +332,10 @@ module singcyc_core(iClk,
             PC <= 0;
         end
         else
-            PC <= PCNext;
+            if(_iPCLoad)
+                PC <= _iPCLoadData;
+            else
+                PC <= PCNext;
         begin
         end
     end
