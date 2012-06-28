@@ -1,4 +1,5 @@
 `timescale 1ns/1ps
+`include "../peripheral/_SelectTest.v"
 
 module DataMem (reset_n,clk,rd,wr,addr,wdata,rdata,accessable);
     input reset_n;

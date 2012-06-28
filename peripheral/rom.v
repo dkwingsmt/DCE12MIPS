@@ -1,4 +1,5 @@
 `timescale 1ns/1ps
+`include "../peripheral/_SelectTest.v"
 
 module ROM (addr,data,accessable);
     input       [31:0]  addr;
