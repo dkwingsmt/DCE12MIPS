@@ -14,7 +14,7 @@ module ALU( iA, iB, iALUFun, iSign, oS, oZ, oV, oN);
 
     wire [31:0] oSadd, oSsub, oSand, oSor, oSxor, oSnor, oSsta;
     wire [31:0] oSsll, oSsrl, oSsra, oSeq, oSneq, oSlt, oSlez;
-    wire [31:0] oSgez, oSgtz;
+    wire [31:0] oSgez, oSgtz, oSlui;
 
     `define oADD (6'b000000)
     `define oSUB (6'b000001)
@@ -35,6 +35,8 @@ module ALU( iA, iB, iALUFun, iSign, oS, oZ, oV, oN);
     `define oLEZ (6'b111101)
     `define oGEZ (6'b111001)
     `define oGTZ (6'b111111)
+
+    `define oLUI (6'b011011)
 
             ADD ADD1(.A(iA), .B(iB), .Sign(iSign), .S(oSadd),
                      .Z(oZadd), .V(oVadd), .N(oNadd));
@@ -68,6 +70,8 @@ module ALU( iA, iB, iALUFun, iSign, oS, oZ, oV, oN);
                      .Z(oZgez), .V(oVgez), .N(oNgez));
             GTZ GTZ1(.A(iA), .B(iB), .Sign(iSign), .S(oSgtz),
                      .Z(oZgtz), .V(oVgtz), .N(oNgtz));
+            LUI LUI1(.A(iA), .B(iB), .Sign(iSign), .S(oSlui),
+                     .Z(oZlui), .V(oVlui), .N(oNlui));
 
     always@(*)
     begin
@@ -183,6 +187,13 @@ module ALU( iA, iB, iALUFun, iSign, oS, oZ, oV, oN);
         oN <= oNgtz;
         oZ <= oZgtz;
         oV <= oVgtz;
+        end
+        `oLUI:
+        begin
+	    oS <= oSlui;
+        oN <= oNlui;
+        oZ <= oZlui;
+        oV <= oVlui;
         end
         default:
         begin

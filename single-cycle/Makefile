@@ -29,6 +29,7 @@ VERILOG_SRCFILE = testbench.v singcyc.v singcyc_core.v \
 				  $(ALUDIR)EQ.v \
 				  $(ALUDIR)GTZ.v \
 				  $(ALUDIR)LT.v \
+				  $(ALUDIR)LUI.v \
 				  $(ALUDIR)NEQ.v \
 				  $(ALUDIR)OR.v \
 				  $(ALUDIR)SLL.v \
