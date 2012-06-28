@@ -32,88 +32,105 @@ module ALU( iA, iB, iALUFun, iSign, oS, oZ, oV, oN);
     `define GEZ (6b'111001)
     `define GTZ (6b'111111)
 
+            ADD ADD1(.A(iA), .B(iB), .Sign(iSign), .S(oSadd),
+                     .Z(oZ), .V(oV), .N(oN));
+            SUB SUB1(.A(iA), .B(iB), .Sign(iSign), .S(oSsub),
+                     .Z(oZ), .V(oV), .N(oN));
+            AND AND1(.A(iA), .B(iB), .Sign(iSign), .S(oSand)
+                     .Z(oZ), .V(oV), .N(oN));
+            OR OR1(.A(iA), .B(iB), .Sign(iSign), .S(oSor)
+                   .Z(oZ), .V(oV), .N(oN));
+            XOR XOR1(.A(iA), .B(iB), .Sign(iSign), .S(oSxor)
+                     .Z(oZ), .V(oV), .N(oN));
+            NOR NOR1(.A(iA), .B(iB), .Sign(iSign), .S(oSnor)
+                     .Z(oZ), .V(oV), .N(oN));
+            STA STA1(.A(iA), .B(iB), .Sign(iSign), .S(oSsta)
+                     .Z(oZ), .V(oV), .N(oN));
+            SLL SLL1(.A(iA), .B(iB), .Sign(iSign), .S(oSsll)
+                     .Z(oZ), .V(oV), .N(oN));
+            SRL SRL1(.A(iA), .B(iB), .Sign(iSign), .S(oSsrl)
+                     .Z(oZ), .V(oV), .N(oN));
+            SRA SRA1(.A(iA), .B(iB), .Sign(iSign), .S(oSsra)
+                     .Z(oZ), .V(oV), .N(oN));
+            EQ EQ1(.A(iA), .B(iB), .Sign(iSign), .S(oSeq)
+                     .Z(oZ), .V(oV), .N(oN));
+            NEQ NEQ1(.A(iA), .B(iB), .Sign(iSign), .S(oSneq)
+                     .Z(oZ), .V(oV), .N(oN));
+            LT LT1(.A(iA), .B(iB), .Sign(iSign), .S(oSlt)
+                     .Z(oZ), .V(oV), .N(oN));
+            LEZ LEZ1(.A(iA), .B(iB), .Sign(iSign), .S(oSlez)
+                     .Z(oZ), .V(oV), .N(oN));
+            GEZ GEZ1(.A(iA), .B(iB), .Sign(iSign), .S(oSgez)
+                     .Z(oZ), .V(oV), .N(oN));
+            GTZ STA1(.A(iA), .B(iB), .Sign(iSign), .S(oSgtz)
+                     .Z(oZ), .V(oV), .N(oN));
+
     always@(*)
     begin
         case(ALUFun)
         `ADD:
         begin
-            ADD ADD1(.A(iA), .B(iB), .Sign(iSign), .S(oS),
-                     .Z(oZ), .V(oV), .N(oN));
+	oS <= oSadd;
         end
         `SUB:
         begin
-            SUB SUB1(.A(iA), .B(iB), .Sign(iSign), .S(oS),
-                     .Z(oZ), .V(oV), .N(oN));
+	oS <= oSsub;
         end
         `AND:
         begin
-            AND AND1(.A(iA), .B(iB), .Sign(iSign), .S(oS)
-                     .Z(oZ), .V(oV), .N(oN));
+	oS <= oSand;
         end
         `OR:
         begin
-            OR OR1(.A(iA), .B(iB), .Sign(iSign), .S(oS)
-                   .Z(oZ), .V(oV), .N(oN));
+	oS <= oSor;
         end
-	    `XOR:
+	`XOR:
         begin
-            XOR XOR1(.A(iA), .B(iB), .Sign(iSign), .S(oS)
-                     .Z(oZ), .V(oV), .N(oN));
+	oS <= oSxor;
         end
-	    `NOR:
+	`NOR:
         begin
-            NOR NOR1(.A(iA), .B(iB), .Sign(iSign), .S(oS)
-                     .Z(oZ), .V(oV), .N(oN));
+	oS <= oSnor; 
         end
         `STA:
         begin
-            STA STA1(.A(iA), .B(iB), .Sign(iSign), .S(oS)
-                     .Z(oZ), .V(oV), .N(oN));
+	oS <= oSsta;
         end
         `SLL:
         begin
-            SLL SLL1(.A(iA), .B(iB), .Sign(iSign), .S(oS)
-                     .Z(oZ), .V(oV), .N(oN));
+	oS <= oSsll;
         end
         `SRL:
         begin
-            SRL SRL1(.A(iA), .B(iB), .Sign(iSign), .S(oS)
-                     .Z(oZ), .V(oV), .N(oN));
+	oS <= oSsrl;
         end
         `SRA:
         begin
-            SRA SRA1(.A(iA), .B(iB), .Sign(iSign), .S(oS)
-                     .Z(oZ), .V(oV), .N(oN));
+	oS <= oSsra;
         end
         `EQ:
         begin
-            EQ EQ1(.A(iA), .B(iB), .Sign(iSign), .S(oS)
-                     .Z(oZ), .V(oV), .N(oN));
+	oS <= oSeq;
         end
         `NEQ:
         begin
-            NEQ NEQ1(.A(iA), .B(iB), .Sign(iSign), .S(oS)
-                     .Z(oZ), .V(oV), .N(oN));
+	oS <= oSneq;
         end
         `LT:
         begin
-            LT LT1(.A(iA), .B(iB), .Sign(iSign), .S(oS)
-                     .Z(oZ), .V(oV), .N(oN));
+	oS <= oSlt;
         end
         `LEZ:
         begin
-            LEZ LEZ1(.A(iA), .B(iB), .Sign(iSign), .S(oS)
-                     .Z(oZ), .V(oV), .N(oN));
+	oS <= oSlez;
         end
         `GEZ:
         begin
-            GEZ GEZ1(.A(iA), .B(iB), .Sign(iSign), .S(oS)
-                     .Z(oZ), .V(oV), .N(oN));
+	oS <= oSgez;
         end
         `GTZ:
         begin
-            GTZ STA1(.A(iA), .B(iB), .Sign(iSign), .S(oS)
-                     .Z(oZ), .V(oV), .N(oN));
+	oS <= oSgtz;
         end
         default:
         begin
