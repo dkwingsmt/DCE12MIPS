@@ -44,7 +44,7 @@ module ALU( iA, iB, iALUFun, iSign, oS, oZ, oV, oN);
                      .Z(oZand), .V(oVand), .N(oNand));
             OR OR1(.A(iA), .B(iB), .Sign(iSign), .S(oSor),
                      .Z(oZor), .V(oVor), .N(oNor));
-            XOR XOR1(.A(iAadd), .B(iB), .Sign(iSign), .S(oSxor),
+            XOR XOR1(.A(iA), .B(iB), .Sign(iSign), .S(oSxor),
                      .Z(oZxor), .V(oVxor), .N(oNxor));
             NOR NOR1(.A(iA), .B(iB), .Sign(iSign), .S(oSnor),
                      .Z(oZnor), .V(oVnor), .N(oNnor));
