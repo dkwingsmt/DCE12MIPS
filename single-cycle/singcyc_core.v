@@ -118,14 +118,14 @@ module singcyc_ctrl_unit(   iOpCode,
         // Default: 
         // Undefined ALU behaviour. No jump, no branch.
         // No memread/write, no regwrite.
-            oJump <= 1'bx;      oBranch <= 1'b0;    oBranchEq <= 1'bx;  
+            oJump <= 1'b0;      oBranch <= 1'b0;    oBranchEq <= 1'bx;  
             oALUSrc <= 1'bx;    oALUOp <= 2'bxx;
             oRegWrite <= 1'b0;  oRegDst <= 1'bx;    oMemtoReg <= 1'bx;    
             oMemRead <= 1'b0;   oMemWrite <= 1'b0;
 
         case(iOpCode)
         `OPCODE_RSTYLE: begin
-            oRegDst <= 1'b1;    oRegWrite <= 1'b1;  
+            oRegDst <= 1'b1;    oRegWrite <= 1'b1;  oMemtoReg <= 1'b0;    
             oALUSrc <= 1'b0;    oALUOp <= 2'b10;
         end
         `OPCODE_LW: begin
@@ -148,11 +148,11 @@ module singcyc_ctrl_unit(   iOpCode,
         `OPCODE_SLTIU: begin
         end
         `OPCODE_BEQ: begin
-            oBranch <= 1'b0;    oBranchEq <= 1'b1;  
+            oBranch <= 1'b0;    oBranchEq <= 1'b1;  oJump <= 1'bx;
             oALUSrc <= 1'b0;    oALUOp <= 2'b01;
         end
         `OPCODE_BNE: begin
-            oBranch <= 1'b0;    oBranchEq <= 1'b0;  
+            oBranch <= 1'b0;    oBranchEq <= 1'b0;  oJump <= 1'bx;
             oALUSrc <= 1'b0;    oALUOp <= 2'b01;
         end
         `OPCODE_J: begin
@@ -182,7 +182,7 @@ module singcyc_core(iClk,
     input               iRst_n;
     output      [31:0]  oRdInstAddr;
     input       [31:0]  iRdInst;
-    output              oRdWrMemAddr;
+    output      [31:0]  oRdWrMemAddr;
     output              oMemWrite;
     output              oMemRead;
     output      [31:0]  oWrData;
@@ -237,7 +237,7 @@ module singcyc_core(iClk,
     wire    [31:0]  PCBranchOffset;
     wire    [31:0]  PCBranchTgt;
     wire    [31:0]  PCJumpTgt;
-    wire            PCNext;
+    wire    [31:0]  PCNext;
     wire            DoBranch;
 
     // ====== Instantialization ======
@@ -311,7 +311,7 @@ module singcyc_core(iClk,
     assign RegWrite = CtrlRegWrite;
 
     assign AluIn0 = RdRegData0;
-    assign AluIn1 = CtrlALUSrc ? IStyleAluSrc1 : RdRegId1;
+    assign AluIn1 = CtrlALUSrc ? IStyleAluSrc1 : RdRegData1;
     assign DoBranch = CtrlBranch & ~(CtrlBranchEq ^ AluZero);
 
     assign oRdWrMemAddr = AluOut;
@@ -328,7 +328,7 @@ module singcyc_core(iClk,
     begin
         if(~iRst_n)
         begin
-            PC <= 0;
+            PC <= 32'h00400000;
         end
         else
             if(_iPCLoad)

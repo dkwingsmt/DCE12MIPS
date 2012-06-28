@@ -34,7 +34,9 @@ VERILOG_SRCFILE = testbench.v singcyc.v singcyc_core.v \
 				  $(ALUDIR)SLL.v \
 				  $(ALUDIR)SRL.v \
 				  $(ALUDIR)SUB.v
-VERILOG_DEPEND = tb1.v
+VERILOG_DEPEND = tb1.v \
+				 $(PERIDIR)DataMemInit.v \
+				 $(PERIDIR)InstRom.v
 COMPILE_DST = v.out
 SIMULATE_OUTPUT = v.lxt
 SIMULATE_POSTFIX = .lxt
