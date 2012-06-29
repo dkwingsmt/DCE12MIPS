@@ -1,7 +1,8 @@
 `timescale 1ns/1ps
 `include "../peripheral/_SelectTest.v"
 
-module DataMem (reset_n,clk,rd,wr,addr,wdata,rdata,accessable);
+module DataMem (reset_n,clk,rd,wr,addr,wdata,rdata,accessable,
+                switch, led, digi);
     input               reset_n;
     input               clk;
     input               rd;
@@ -10,10 +11,10 @@ module DataMem (reset_n,clk,rd,wr,addr,wdata,rdata,accessable);
     output  reg [31:0]  rdata;
     input       [31:0]  wdata;
     output              accessable;  // 0 if invalid datamem addr
+    input       [7:0]   switch;
+    output      [7:0]   led;
+    output      [11:0]  digi;
 
-    wire [7:0]  peri_led;
-    wire [7:0]  peri_switch;
-    wire [11:0] peri_digi;
     wire        peri_irqout;
     wire [31:0] peri_rdata;
     wire        peri_racc;
@@ -26,9 +27,9 @@ module DataMem (reset_n,clk,rd,wr,addr,wdata,rdata,accessable);
         .addr(addr),
         .wdata(wdata),
         .rdata(peri_rdata),
-        .led(peri_led),
-        .switch(peri_switch),
-        .digi(peri_digi),
+        .led(led),
+        .switch(switch),
+        .digi(digi),
         .irqout(peri_irqout),
         .r_accessible(peri_racc),
         .w_accessible(peri_wacc));

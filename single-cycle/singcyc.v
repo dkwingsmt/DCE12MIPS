@@ -1,10 +1,16 @@
 `timescale 1ns/1ps
 
-module singcyc(iClk, 
-               iRst_n);
+module singcyc( iClk, 
+                iRst_n,
+                iSwitch, 
+                oLED, 
+                oDigi);
 
-    input       iClk;
-    input       iRst_n;
+    input           iClk;
+    input           iRst_n;
+    input   [7:0]   iSwitch;
+    output  [7:0]   oLED;
+    output  [11:0]  oDigi;
 
     wire            DataMemRd;
     wire            DataMemWr;
@@ -19,7 +25,10 @@ module singcyc(iClk,
                           .addr(DataMemAddr),
                           .wdata(DataMemWrData),
                           .rdata(DataMemRdData),
-                          .accessable(DataMemAccssable));
+                          .accessable(DataMemAccssable),
+                          .switch(iSwitch),
+                          .led(oLED),
+                          .digi(oDigi));
 
     wire    [31:0]  RomAddr;
     wire    [31:0]  RomRdData;

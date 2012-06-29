@@ -2,6 +2,10 @@
 item :
 .word 5,3,5,2,13
 
+.data 0x40000000
+#peri :
+#.word 0,0,0,0,0,0,0,0
+
 .text 
 .globl main
 
@@ -58,5 +62,8 @@ j LOOP1
 
 end:
 add $22,$3,$3
+nor $2,$0,$0
+la $3, 0x40000010
+sw $2, ($3)
 j LOOP1
 
