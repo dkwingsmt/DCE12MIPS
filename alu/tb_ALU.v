@@ -17,7 +17,7 @@ module temptb();
     ALU ALU1( .iA(iA), .iB(iB), .iALUFun(iALUFun), .iSign(iSign),
               .oS(oS), .oZ(oZ), .oV(oV), .oN(oN));
 
-    reg [15:0] test_result;
+    reg [16:0] test_result;
 
     initial
     begin
@@ -90,7 +90,8 @@ module temptb();
         # DELAY;
 
         iALUFun = 6'b100000;
-        iB = 4;
+        iA = 4;
+        iB = 32'b10000000000000000000000011011001;
         # DELAY;
         if (oS == 32'b00000000000000000000110110010000) test_result[7] = 1;
         else test_result[7] = 0;
@@ -157,6 +158,14 @@ module temptb();
         # DELAY;
         if (oS == 0) test_result[15] = 1;
         else test_result[15] = 0;
+
+        # DELAY;
+        
+        iALUFun = 6'b011011;
+        iB = 32'b10000000000000000000000011011001;
+        # DELAY;
+        if (oS == 32'b00000000110110010000000000000000) test_result[16] = 1;
+        else test_result[16] = 0;
 
         #2000
         $dumpflush;
