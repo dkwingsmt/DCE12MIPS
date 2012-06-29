@@ -11,9 +11,12 @@ module SRA( A, B, Sign, S, Z, V, N);
     output reg V;
     output reg N;
 
+    wire [63:0] ExtB;
+    assign ExtB = {{32{B[31]}}, B} >> A;
+
     always@(*)
     begin
-        S = A >> B;
+        S = ExtB[31:0];
         V <= 0;
         N <= 0;
         if (S == 0) Z <= 1;

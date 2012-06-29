@@ -17,6 +17,7 @@ VERILOG_SRCFILE = testbench.v singcyc.v singcyc_core.v \
 				  $(PERIDIR)rom.v \
 				  $(PERIDIR)regfile.v \
 				  $(PERIDIR)DataMem.v \
+				  $(PERIDIR)Peripheral.v \
 				  $(ALUDIR)ALU.v \
 				  $(ALUDIR)ADD.v \
 				  $(ALUDIR)AND.v \

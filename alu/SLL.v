@@ -13,7 +13,7 @@ module SLL( A, B, Sign, S, Z, V, N);
 
     always@(*)
     begin
-        S = A << B;
+        S = B << A;
         V <= 0;
         N <= 0;
         if (S == 0) Z <= 1;

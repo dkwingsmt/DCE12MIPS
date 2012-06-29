@@ -6,6 +6,8 @@ module ROM (addr,data,accessable);
     output  reg [31:0]  data;
     output  reg         accessable;
 
+    wire [15:2] eff_addr;
+    assign eff_addr = addr[15:2];
     always@(*)
     begin
         accessable <= 1'b0;

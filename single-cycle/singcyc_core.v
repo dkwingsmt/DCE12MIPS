@@ -13,11 +13,15 @@
 `define  FUNCT_AND          6'h24
 `define OPCODE_ANDI         6'h0c
 `define  FUNCT_OR           6'h25
+`define OPCODE_ORI          6'h0d
 `define  FUNCT_XOR          6'h26
 `define  FUNCT_NOR          6'h27
 `define  FUNCT_SLL          6'h00
 `define  FUNCT_SRL          6'h02
 `define  FUNCT_SRA          6'h03
+`define  FUNCT_SLLV         6'h04
+`define  FUNCT_SRLV         6'h06
+`define  FUNCT_SRAV         6'h07
 `define  FUNCT_SLT          6'h2a
 `define OPCODE_SLTI         6'h0a
 `define OPCODE_SLTIU        6'h0b
@@ -51,6 +55,7 @@ module singcyc_alu_ctrl(iAluOp,
                         iFunct,
                         oAluCtrl, 
                         oSign,
+                        oShamt,
                         oJR,
                         oJRLink);
 
@@ -59,6 +64,7 @@ module singcyc_alu_ctrl(iAluOp,
     input       [5:0]   iFunct;
     output  reg [5:0]   oAluCtrl;
     output  reg         oSign;
+    output  reg         oShamt;
     output  reg         oJR;
     output  reg         oJRLink;
 
@@ -66,6 +72,7 @@ module singcyc_alu_ctrl(iAluOp,
     begin
         oAluCtrl <= 6'bxxxxxx;
         oSign <= 1'bx;
+        oShamt <= 1'b0;
         oJR <= 1'b0;
         oJRLink <= 1'b0;
         case(iAluOp)
@@ -87,9 +94,12 @@ module singcyc_alu_ctrl(iAluOp,
             `FUNCT_OR:   oAluCtrl <= `ALUCTRL_OR;
             `FUNCT_XOR:  oAluCtrl <= `ALUCTRL_XOR;
             `FUNCT_NOR:  oAluCtrl <= `ALUCTRL_NOR;
-            `FUNCT_SLL:  oAluCtrl <= `ALUCTRL_SLL;
-            `FUNCT_SRL:  oAluCtrl <= `ALUCTRL_SRL;
-            `FUNCT_SRA:  oAluCtrl <= `ALUCTRL_SRA;
+            `FUNCT_SLLV:  oAluCtrl <= `ALUCTRL_SLL;
+            `FUNCT_SRLV:  oAluCtrl <= `ALUCTRL_SRL;
+            `FUNCT_SRAV:  oAluCtrl <= `ALUCTRL_SRA;
+            `FUNCT_SLL: begin oShamt <= 1'b1; oAluCtrl <= `ALUCTRL_SLL; end
+            `FUNCT_SRL: begin oShamt <= 1'b1; oAluCtrl <= `ALUCTRL_SRL; end
+            `FUNCT_SRA: begin oShamt <= 1'b1; oAluCtrl <= `ALUCTRL_SRA; end
             `FUNCT_SLT:  oAluCtrl <= `ALUCTRL_LT;
             `FUNCT_JR:   begin oJR <= 1'b1;   oJRLink <= 1'b0; end
             `FUNCT_JALR: begin oJR <= 1'b1;   oJRLink <= 1'b1; end
@@ -100,6 +110,7 @@ module singcyc_alu_ctrl(iAluOp,
             `OPCODE_ADDI:   begin oAluCtrl <= `ALUCTRL_ADD;  oSign <= 1'b1; end
             `OPCODE_ADDIU:  begin oAluCtrl <= `ALUCTRL_ADD;  oSign <= 1'b0; end   
             `OPCODE_ANDI:   oAluCtrl <= `ALUCTRL_AND;
+            `OPCODE_ORI:    oAluCtrl <= `ALUCTRL_OR;
             `OPCODE_SLTI:   begin oAluCtrl <= `ALUCTRL_LT;   oSign <= 1'b1; end    
             `OPCODE_SLTIU:  begin oAluCtrl <= `ALUCTRL_LT;   oSign <= 1'b0; end   
             `OPCODE_LUI:    oAluCtrl <= `ALUCTRL_LUI;
@@ -188,6 +199,9 @@ module singcyc_ctrl_unit(   iOpCode,
         `OPCODE_ANDI: begin
             `CTRL_ISTYLE_BEHAVIOUR
         end
+        `OPCODE_ORI: begin
+            `CTRL_ISTYLE_BEHAVIOUR
+        end
         `OPCODE_SLTI: begin
             `CTRL_ISTYLE_BEHAVIOUR
         end
@@ -195,11 +209,11 @@ module singcyc_ctrl_unit(   iOpCode,
             `CTRL_ISTYLE_BEHAVIOUR
         end
         `OPCODE_BEQ: begin
-            oBranch <= 1'b0;    oBranchEq <= 1'b1;  oJump <= 1'bx;
+            oBranch <= 1'b1;    oBranchEq <= 1'b1;  oJump <= 1'b0;
             oALUSrc <= 1'b0;    oALUOp <= 2'b01;
         end
         `OPCODE_BNE: begin
-            oBranch <= 1'b0;    oBranchEq <= 1'b0;  oJump <= 1'bx;
+            oBranch <= 1'b1;    oBranchEq <= 1'b0;  oJump <= 1'b0;
             oALUSrc <= 1'b0;    oALUOp <= 2'b01;
         end
         `OPCODE_J: begin
@@ -282,6 +296,7 @@ module singcyc_core(iClk,
     wire            CtrlRegWrite;
     wire            CtrlALUSrc;
     wire    [1:0]   CtrlALUOp;
+    wire            CtrlALUShamt;
     
     //====== Other ======
     wire    [31:0]  PCAddFour;
@@ -339,7 +354,8 @@ module singcyc_core(iClk,
         .oAluCtrl(AluCtrl),
         .oSign(AluSign),
         .oJR(CtrlJR),
-        .oJRLink(CtrlJRLink));
+        .oJRLink(CtrlJRLink),
+        .oShamt(CtrlALUShamt));
 
     ADD add32b_inst_PC_add_four(
         .A(PC),
@@ -372,8 +388,10 @@ module singcyc_core(iClk,
                        AluOut;
     assign RegWrite = CtrlRegWrite | Link;
 
-    assign AluIn0 = RdRegData0;
-    assign AluIn1 = CtrlALUSrc ? IStyleAluSrc1 : RdRegData1;
+    assign AluIn0 = CtrlALUShamt ? {{27{1'b0}}, InstShamt} :
+                    RdRegData0;
+    assign AluIn1 = CtrlALUSrc ? IStyleAluSrc1 : 
+                    RdRegData1;
     assign DoBranch = CtrlBranch & ~(CtrlBranchEq ^ AluZero);
 
     assign oRdWrMemAddr = AluOut;
