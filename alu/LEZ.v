@@ -13,8 +13,16 @@ module LEZ( A, B, Sign, S, Z, V, N);
 
     always@(*)
     begin
-        if (A <= 0) S = 1;
-	    else S = 0;
+        if (~Sign)
+        begin
+            if (A == 0) S = 1;
+            else S = 0;
+        end
+        else
+        begin
+            if ((A == 0) || (A[31] == 1)) S = 1;
+	        else S = 0;
+        end
         V = 0;
         N = 0;
         if (S == 0) Z = 1;

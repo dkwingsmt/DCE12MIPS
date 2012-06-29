@@ -11,10 +11,9 @@ WAVEFILE_POSTFIX = .lxt
 
 ######################################################################
 # Project settings
-VERILOG_SRCFILE = testbench.v 
-VERILOG_DEPEND = tb1.v
-COMPILE_DST = v.out
-SIMULATE_OUTPUT = v.lxt
+VERILOG_SRCFILE = ALU.v tb_ALU.v ADD.v SUB.v AND.v OR.v XOR.v NOR.v STA.v SLL.v SRL.v SRA.v EQ.v NEQ.v LT.v LEZ.v GEZ.v GTZ.v
+COMPILE_DST = test 
+SIMULATE_OUTPUT = test.lxt
 SIMULATE_POSTFIX = .lxt
 MV_CMD = cp
 
@@ -41,7 +40,7 @@ else
 endif
 	$(GTKWAVE_EXE) $(WAVE_DST)
 
-$(COMPILE_DST) : $(VERILOG_SRCFILE) $(VERILOG_DEPEND)
+$(COMPILE_DST) : $(VERILOG_SRCFILE)
 	$(IVERILOG_EXE) -o $(COMPILE_DST) $(VERILOG_SRCFILE)
 
 $(SIMULATE_OUTPUT) : $(COMPILE_DST)
