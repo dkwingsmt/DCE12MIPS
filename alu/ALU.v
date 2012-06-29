@@ -78,129 +78,129 @@ module ALU( iA, iB, iALUFun, iSign, oS, oZ, oV, oN);
         case(iALUFun)
         `oADD:
         begin
-	    oS <= oSadd;
-        oN <= oNadd;
-        oZ <= oZadd;
-        oV <= oVadd;
+	    oS = oSadd;
+        oN = oNadd;
+        oZ = oZadd;
+        oV = oVadd;
         end
         `oSUB:
         begin
-	    oS <= oSsub;
-        oN <= oNsub;
-        oZ <= oZsub;
-        oV <= oVsub;
+	    oS = oSsub;
+        oN = oNsub;
+        oZ = oZsub;
+        oV = oVsub;
         end
         `oAND:
         begin
-	    oS <= oSand;
-        oN <= oNand;
-        oZ <= oZand;
-        oV <= oVand;
+	    oS = oSand;
+        oN = oNand;
+        oZ = oZand;
+        oV = oVand;
         end
         `oOR:
         begin
-	    oS <= oSor;
-        oN <= oNor;
-        oZ <= oZor;
-        oV <= oVor;
+	    oS = oSor;
+        oN = oNor;
+        oZ = oZor;
+        oV = oVor;
         end
 	    `oXOR:
         begin
-	    oS <= oSxor;
-        oN <= oNxor;
-        oZ <= oZxor;
-        oV <= oVxor;
+	    oS = oSxor;
+        oN = oNxor;
+        oZ = oZxor;
+        oV = oVxor;
         end
 	    `oNOR:
         begin
-	    oS <= oSnor;
-        oN <= oNnor;
-        oZ <= oZnor;
-        oV <= oVnor;
+	    oS = oSnor;
+        oN = oNnor;
+        oZ = oZnor;
+        oV = oVnor;
         end
         `oSTA:
         begin
-	    oS <= oSsta;
-        oN <= oNsta;
-        oZ <= oZsta;
-        oV <= oVsta;
+	    oS = oSsta;
+        oN = oNsta;
+        oZ = oZsta;
+        oV = oVsta;
         end
         `oSLL:
         begin
-	    oS <= oSsll;
-        oN <= oNsll;
-        oZ <= oZsll;
-        oV <= oVsll;
+	    oS = oSsll;
+        oN = oNsll;
+        oZ = oZsll;
+        oV = oVsll;
         end
         `oSRL:
         begin
-	    oS <= oSsrl;
-        oN <= oNsrl;
-        oZ <= oZsrl;
-        oV <= oVsrl;
+	    oS = oSsrl;
+        oN = oNsrl;
+        oZ = oZsrl;
+        oV = oVsrl;
         end
         `oSRA:
         begin
-	    oS <= oSsra;
-        oN <= oNsra;
-        oZ <= oZsra;
-        oV <= oVsra;
+	    oS = oSsra;
+        oN = oNsra;
+        oZ = oZsra;
+        oV = oVsra;
         end
         `oEQ:
         begin
-	    oS <= oSeq;
-        oN <= oNeq;
-        oZ <= oZeq;
-        oV <= oVeq;
+	    oS = oSeq;
+        oN = oNeq;
+        oZ = oZeq;
+        oV = oVeq;
         end
         `oNEQ:
         begin
-	    oS <= oSneq;
-        oN <= oNneq;
-        oZ <= oZneq;
-        oV <= oVneq;
+	    oS = oSneq;
+        oN = oNneq;
+        oZ = oZneq;
+        oV = oVneq;
         end
         `oLT:
         begin
-	    oS <= oSlt;
-        oN <= oNlt;
-        oZ <= oZlt;
-        oV <= oVlt;
+	    oS = oSlt;
+        oN = oNlt;
+        oZ = oZlt;
+        oV = oVlt;
         end
         `oLEZ:
         begin
-	    oS <= oSlez;
-        oN <= oNlez;
-        oZ <= oZlez;
-        oV <= oVlez;
+	    oS = oSlez;
+        oN = oNlez;
+        oZ = oZlez;
+        oV = oVlez;
         end
         `oGEZ:
         begin
-	    oS <= oSgez;
-        oN <= oNgez;
-        oZ <= oZgez;
-        oV <= oVgez;
+	    oS = oSgez;
+        oN = oNgez;
+        oZ = oZgez;
+        oV = oVgez;
         end
         `oGTZ:
         begin
-	    oS <= oSgtz;
-        oN <= oNgtz;
-        oZ <= oZgtz;
-        oV <= oVgtz;
+	    oS = oSgtz;
+        oN = oNgtz;
+        oZ = oZgtz;
+        oV = oVgtz;
         end
         `oLUI:
         begin
-	    oS <= oSlui;
-        oN <= oNlui;
-        oZ <= oZlui;
-        oV <= oVlui;
+	    oS = oSlui;
+        oN = oNlui;
+        oZ = oZlui;
+        oV = oVlui;
         end
         default:
         begin
-            oS <= 0;
-            oZ <= 1;
-            oV <= 0;
-            oN <= 0;
+            oS = 0;
+            oZ = 1;
+            oV = 0;
+            oN = 0;
         end
         endcase
     end
