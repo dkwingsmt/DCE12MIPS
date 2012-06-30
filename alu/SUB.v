@@ -29,6 +29,11 @@ module SUB( A, B, Sign, S, Z, V, N );
             begin
                 V = 0;
                 N = (S[31] == 1);
+                S = A - B;
+                if (S == 0) Z = 1;
+                else Z = 0;
+                if (A < B) N = 1;
+                else N = 0;
             end
             else
             begin
