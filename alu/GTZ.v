@@ -15,18 +15,18 @@ module GTZ( A, B, Sign, S, Z, V, N);
     begin
         if (~Sign)
         begin
-            if (S == 0) S <= 0;
-            else S <= 1;
+            if (A == 0) S = 0;
+            else S = 1;
         end
         else
         begin
-            if ((A[31] == 0) && (A != 0)) S <= 1;
-	        else S <= 0;
+            if ((A[31] == 0) && (A != 0)) S = 1;
+	        else S = 0;
         end
-        V <= 0;
-        N <= 0;
-        if (S == 0) Z <= 1;
-        else Z <= 0;
+        V = 0;
+        N = 0;
+        if (S == 0) Z = 1;
+        else Z = 0;
     end
 
 endmodule

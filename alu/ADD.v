@@ -15,67 +15,50 @@ module ADD(A,B,Sign,S,Z,V,N);
 
     always@(*)
     begin
+        S = A + B;
+        if (S == 0) Z = 1;
+        else Z = 0;
         if (~Sign)
         begin
-            S <= A + B;
-            N <= 0;
-            if (S == 0) Z = 1;
-            else Z <= 0;
-            if ((S < A) || (S < B)) V <= 1;
-            else V <= 0;
+            V = ((S < A) || (S < B));
+            N = 0;
         end
         else
         begin
             if ((A[31] == 0) && (B[31] == 0))
             begin
-                N <= 0;
-                S <= A + B;
-                if (S == 0) Z <= 1;
-                else Z <= 0;
-                if (S[31] == 1) V <= 1;
-                else V <= 0;
+                if (S[31] == 1)
+                begin
+                    V = 1;
+                    N = 1;
+                end
+                else
+                begin
+                    V = 0;
+                    N = 0;
+                end
             end
             else if (A[31] != B[31])
             begin
-                V <= 0;
-                S <= A + B;
-                if (S == 0) Z <= 1;
-                else Z <= 0;
-                if (A[31])
-                begin
-                    tempA = A * (-1);
-                    if (tempA > B) N <= 1;
-                    else N <= 0;
-                end
-                else if (B[31])
-                begin
-                    tempB = B * (-1);
-                    if (tempB > A) N <= 1;
-                    else N <= 0;
-                end
+                V = 0;
+                N = (S[31] == 1)
             end
             else
             begin
-                N <= 1;
-                S <= A + B;
-                if (S == 0) Z <= 1;
-                else Z <= 0;
-                if (S[31] == 0) V <= 1;
-                else V <= 0;
+                if (S[31] == 0)
+                begin
+                    V = 1;
+                    N = 0;
+                end
+                else
+                begin
+                    V = 0;
+                    N = 1;
+                end
             end
         end
     end
-
 endmodule
-
-
-
-
-
-
-
-
-
 
 
 

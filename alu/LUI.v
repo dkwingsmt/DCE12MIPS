@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module AND( A, B, Sign, S, Z, V, N);
+module LUI( A, B, Sign, S, Z, V, N);
 
     input [31:0] A;
     input [31:0] B;
@@ -13,7 +13,7 @@ module AND( A, B, Sign, S, Z, V, N);
 
     always@(*)
     begin
-        S = A & B;
+        S = {B[15:0], {16{1'b0}}};
         V = 0;
         N = 0;
         if (S == 0) Z = 1;
