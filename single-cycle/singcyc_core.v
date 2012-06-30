@@ -413,7 +413,7 @@ module singcyc_core(iClk,
     begin
         if(~iRst_n)
         begin
-            PC <= 32'h004000a8;
+            PC <= 32'h00000000;
         end
         else
             if(_iPCLoad)
