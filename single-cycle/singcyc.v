@@ -4,13 +4,17 @@ module singcyc( iClk,
                 iRst_n,
                 iSwitch, 
                 oLED, 
-                oDigi);
+                oDigi,
+                _oPC,
+                _oPCNext);
 
     input           iClk;
     input           iRst_n;
     input   [7:0]   iSwitch;
     output  [7:0]   oLED;
     output  [11:0]  oDigi;
+    output  [31:0]  _oPC;
+    output  [31:0]  _oPCNext;
 
     wire            DataMemRd;
     wire            DataMemWr;
@@ -50,5 +54,7 @@ module singcyc( iClk,
                            .oWrData(DataMemWrData), 
                            .iRdData(DataMemRdData),
                            ._iPCLoad(_PCLoad),
-                           ._iPCLoadData(_PCLoadData));
+                           ._iPCLoadData(_PCLoadData),
+                           ._oPC(_oPC),
+                           ._oPCNext(_oPCNext));
 endmodule
