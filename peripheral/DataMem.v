@@ -34,8 +34,8 @@ module DataMem (reset_n,clk,rd,wr,addr,wdata,rdata,accessable,
         .r_accessible(peri_racc),
         .w_accessible(peri_wacc));
 
-    parameter GLOBAL_SIZE = 1024;
-    parameter STACK_SIZE = 1024;
+    parameter GLOBAL_SIZE = 32;
+    parameter STACK_SIZE = 32;
     reg [31:0] global_data [GLOBAL_SIZE-1:0];
     reg [31:0] stack_data [12'hfff:12'hfff+1-STACK_SIZE];
 

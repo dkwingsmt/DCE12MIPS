@@ -60,7 +60,7 @@ module SUB( A, B, Sign, S, Z, V, N );
                     if (S > 0) V = 1;
                     else V = 0;
                 end
-                else if (B[31])
+                else
                 begin
                     N = 0;
                     Z = 0;

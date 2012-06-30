@@ -70,50 +70,50 @@ module singcyc_alu_ctrl(iAluOp,
 
     always @(*)
     begin
-        oAluCtrl <= 6'bxxxxxx;
-        oSign <= 1'bx;
-        oShamt <= 1'b0;
-        oJR <= 1'b0;
-        oJRLink <= 1'b0;
+        oAluCtrl = 6'bxxxxxx;
+        oSign = 1'bx;
+        oShamt = 1'b0;
+        oJR = 1'b0;
+        oJRLink = 1'b0;
         case(iAluOp)
         2'b00: begin
-            oAluCtrl <= `ALUCTRL_ADD;
-            oSign <= 1'b0;
+            oAluCtrl = `ALUCTRL_ADD;
+            oSign = 1'b0;
         end
         2'b01: begin
-            oAluCtrl <= `ALUCTRL_SUB;
-            oSign <= 1'b0;
+            oAluCtrl = `ALUCTRL_SUB;
+            oSign = 1'b0;
         end
         2'b10: begin
             case (iFunct)
-            `FUNCT_ADD:  begin oAluCtrl <= `ALUCTRL_ADD;  oSign <= 1'b1; end
-            `FUNCT_ADDU: begin oAluCtrl <= `ALUCTRL_ADD;  oSign <= 1'b0; end
-            `FUNCT_SUB:  begin oAluCtrl <= `ALUCTRL_SUB;  oSign <= 1'b1; end
-            `FUNCT_SUBU: begin oAluCtrl <= `ALUCTRL_SUB;  oSign <= 1'b0; end
-            `FUNCT_AND:  oAluCtrl <= `ALUCTRL_AND;
-            `FUNCT_OR:   oAluCtrl <= `ALUCTRL_OR;
-            `FUNCT_XOR:  oAluCtrl <= `ALUCTRL_XOR;
-            `FUNCT_NOR:  oAluCtrl <= `ALUCTRL_NOR;
-            `FUNCT_SLLV:  oAluCtrl <= `ALUCTRL_SLL;
-            `FUNCT_SRLV:  oAluCtrl <= `ALUCTRL_SRL;
-            `FUNCT_SRAV:  oAluCtrl <= `ALUCTRL_SRA;
-            `FUNCT_SLL: begin oShamt <= 1'b1; oAluCtrl <= `ALUCTRL_SLL; end
-            `FUNCT_SRL: begin oShamt <= 1'b1; oAluCtrl <= `ALUCTRL_SRL; end
-            `FUNCT_SRA: begin oShamt <= 1'b1; oAluCtrl <= `ALUCTRL_SRA; end
-            `FUNCT_SLT:  oAluCtrl <= `ALUCTRL_LT;
-            `FUNCT_JR:   begin oJR <= 1'b1;   oJRLink <= 1'b0; end
-            `FUNCT_JALR: begin oJR <= 1'b1;   oJRLink <= 1'b1; end
+            `FUNCT_ADD:  begin oAluCtrl = `ALUCTRL_ADD;  oSign = 1'b1; end
+            `FUNCT_ADDU: begin oAluCtrl = `ALUCTRL_ADD;  oSign = 1'b0; end
+            `FUNCT_SUB:  begin oAluCtrl = `ALUCTRL_SUB;  oSign = 1'b1; end
+            `FUNCT_SUBU: begin oAluCtrl = `ALUCTRL_SUB;  oSign = 1'b0; end
+            `FUNCT_AND:  oAluCtrl = `ALUCTRL_AND;
+            `FUNCT_OR:   oAluCtrl = `ALUCTRL_OR;
+            `FUNCT_XOR:  oAluCtrl = `ALUCTRL_XOR;
+            `FUNCT_NOR:  oAluCtrl = `ALUCTRL_NOR;
+            `FUNCT_SLLV:  oAluCtrl = `ALUCTRL_SLL;
+            `FUNCT_SRLV:  oAluCtrl = `ALUCTRL_SRL;
+            `FUNCT_SRAV:  oAluCtrl = `ALUCTRL_SRA;
+            `FUNCT_SLL: begin oShamt = 1'b1; oAluCtrl = `ALUCTRL_SLL; end
+            `FUNCT_SRL: begin oShamt = 1'b1; oAluCtrl = `ALUCTRL_SRL; end
+            `FUNCT_SRA: begin oShamt = 1'b1; oAluCtrl = `ALUCTRL_SRA; end
+            `FUNCT_SLT:  oAluCtrl = `ALUCTRL_LT;
+            `FUNCT_JR:   begin oJR = 1'b1;   oJRLink = 1'b0; end
+            `FUNCT_JALR: begin oJR = 1'b1;   oJRLink = 1'b1; end
             endcase
             end
         2'b11: begin
             case (iInstOp)
-            `OPCODE_ADDI:   begin oAluCtrl <= `ALUCTRL_ADD;  oSign <= 1'b1; end
-            `OPCODE_ADDIU:  begin oAluCtrl <= `ALUCTRL_ADD;  oSign <= 1'b0; end   
-            `OPCODE_ANDI:   oAluCtrl <= `ALUCTRL_AND;
-            `OPCODE_ORI:    oAluCtrl <= `ALUCTRL_OR;
-            `OPCODE_SLTI:   begin oAluCtrl <= `ALUCTRL_LT;   oSign <= 1'b1; end    
-            `OPCODE_SLTIU:  begin oAluCtrl <= `ALUCTRL_LT;   oSign <= 1'b0; end   
-            `OPCODE_LUI:    oAluCtrl <= `ALUCTRL_LUI;
+            `OPCODE_ADDI:   begin oAluCtrl = `ALUCTRL_ADD;  oSign = 1'b1; end
+            `OPCODE_ADDIU:  begin oAluCtrl = `ALUCTRL_ADD;  oSign = 1'b0; end   
+            `OPCODE_ANDI:   oAluCtrl = `ALUCTRL_AND;
+            `OPCODE_ORI:    oAluCtrl = `ALUCTRL_OR;
+            `OPCODE_SLTI:   begin oAluCtrl = `ALUCTRL_LT;   oSign = 1'b1; end    
+            `OPCODE_SLTIU:  begin oAluCtrl = `ALUCTRL_LT;   oSign = 1'b0; end   
+            `OPCODE_LUI:    oAluCtrl = `ALUCTRL_LUI;
             endcase
             end
         endcase
@@ -152,19 +152,19 @@ module singcyc_ctrl_unit(   iOpCode,
         // Default: 
         // Undefined ALU behaviour. No jump, no branch.
         // No memread/write, no regwrite.
-            oBranch <= 1'b0;    oBranchEq <= 1'bx;  
-            oJump <= 1'b0;      oJLink <= 1'b0;
-            oALUSrc <= 1'bx;    oALUOp <= 2'bxx;
-            oRegWrite <= 1'b0;  oRegDst <= 1'bx;    oMemtoReg <= 1'bx;    
-            oMemRead <= 1'b0;   oMemWrite <= 1'b0;
+            oBranch = 1'b0;    oBranchEq = 1'bx;  
+            oJump = 1'b0;      oJLink = 1'b0;
+            oALUSrc = 1'bx;    oALUOp = 2'bxx;
+            oRegWrite = 1'b0;  oRegDst = 1'bx;    oMemtoReg = 1'bx;    
+            oMemRead = 1'b0;   oMemWrite = 1'b0;
 
         // RStyle behaviour: 
         // ALU behaviour defined by Funct. No jump, no branch.
         // ALU Op2 read from reg.
         // No memread/write. Write reg rt with alu result.
             `define CTRL_RSTYLE_BEHAVIOUR begin \
-                oRegDst <= 1'b1;    oRegWrite <= 1'b1;  oMemtoReg <= 1'b0; \
-                oALUSrc <= 1'b0;    oALUOp <= 2'b10; \
+                oRegDst = 1'b1;    oRegWrite = 1'b1;  oMemtoReg = 1'b0; \
+                oALUSrc = 1'b0;    oALUOp = 2'b10; \
                 end
 
         // IStyle behaviour: 
@@ -172,8 +172,8 @@ module singcyc_ctrl_unit(   iOpCode,
         // ALU Op2 from instImm.
         // No memread/write. Write reg rd with alu result.
             `define CTRL_ISTYLE_BEHAVIOUR begin \
-                oRegDst <= 1'b0;    oRegWrite <= 1'b1;  oMemtoReg <= 1'b0; \
-                oALUSrc <= 1'b1;    oALUOp <= 2'b11; \
+                oRegDst = 1'b0;    oRegWrite = 1'b1;  oMemtoReg = 1'b0; \
+                oALUSrc = 1'b1;    oALUOp = 2'b11; \
                 end
 
         case(iOpCode)
@@ -181,11 +181,11 @@ module singcyc_ctrl_unit(   iOpCode,
             `CTRL_RSTYLE_BEHAVIOUR 
         end
         `OPCODE_LW: begin
-            oRegDst <= 1'b0;    oMemRead <= 1'b1;  oMemtoReg <= 1'b1;  
-            oRegWrite <= 1'b1;  oALUSrc <= 1'b1;   oALUOp <= 2'b00;
+            oRegDst = 1'b0;    oMemRead = 1'b1;  oMemtoReg = 1'b1;  
+            oRegWrite = 1'b1;  oALUSrc = 1'b1;   oALUOp = 2'b00;
         end
         `OPCODE_SW: begin
-            oMemWrite <= 1'b1;  oALUSrc <= 1'b1;   oALUOp <= 2'b00;
+            oMemWrite = 1'b1;  oALUSrc = 1'b1;   oALUOp = 2'b00;
         end
         `OPCODE_LUI: begin
             `CTRL_ISTYLE_BEHAVIOUR
@@ -209,18 +209,18 @@ module singcyc_ctrl_unit(   iOpCode,
             `CTRL_ISTYLE_BEHAVIOUR
         end
         `OPCODE_BEQ: begin
-            oBranch <= 1'b1;    oBranchEq <= 1'b1;  oJump <= 1'b0;
-            oALUSrc <= 1'b0;    oALUOp <= 2'b01;
+            oBranch = 1'b1;    oBranchEq = 1'b1;  oJump = 1'b0;
+            oALUSrc = 1'b0;    oALUOp = 2'b01;
         end
         `OPCODE_BNE: begin
-            oBranch <= 1'b1;    oBranchEq <= 1'b0;  oJump <= 1'b0;
-            oALUSrc <= 1'b0;    oALUOp <= 2'b01;
+            oBranch = 1'b1;    oBranchEq = 1'b0;  oJump = 1'b0;
+            oALUSrc = 1'b0;    oALUOp = 2'b01;
         end
         `OPCODE_J: begin
-            oJump <= 1'b1;      oJLink <= 1'b0;
+            oJump = 1'b1;      oJLink = 1'b0;
         end
         `OPCODE_JAL: begin
-            oJump <= 1'b1;      oJLink <= 1'b1;
+            oJump = 1'b1;      oJLink = 1'b1;
         end
         endcase
     end
@@ -237,7 +237,9 @@ module singcyc_core(iClk,
                     oWrData, 
                     iRdData,
                     _iPCLoad,
-                    _iPCLoadData);
+                    _iPCLoadData,
+                    _oPC,
+                    _oPCNext);
 
     //====== Input/Output ======
     input               iClk;
@@ -251,6 +253,8 @@ module singcyc_core(iClk,
     input       [31:0]  iRdData;
     input               _iPCLoad;
     input       [31:0]  _iPCLoadData;
+    output      [31:0]  _oPC;
+    output      [31:0]  _oPCNext;
 
     //====== Essential ======
     reg     [31:0]  PC;
@@ -409,7 +413,7 @@ module singcyc_core(iClk,
     begin
         if(~iRst_n)
         begin
-            PC <= 32'h00000000;
+            PC <= 32'h004000a8;
         end
         else
             if(_iPCLoad)
@@ -419,5 +423,7 @@ module singcyc_core(iClk,
         begin
         end
     end
+    assign _oPC = PC;
+    assign _oPCNext = PCNext;
 
 endmodule
