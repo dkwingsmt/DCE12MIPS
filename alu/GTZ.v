@@ -15,7 +15,7 @@ module GTZ( A, B, Sign, S, Z, V, N);
     begin
         if (~Sign)
         begin
-            if (S == 0) S = 0;
+            if (A == 0) S = 0;
             else S = 1;
         end
         else
