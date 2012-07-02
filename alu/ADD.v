@@ -41,7 +41,7 @@ module ADD(A,B,Sign,S,Z,V,N);
             else if (A[31] != B[31])
             begin
                 V = 0;
-                N = (S[31] == 1)
+                N = (S[31] == 1);
             end
             else
             begin

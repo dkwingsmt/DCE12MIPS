@@ -4,11 +4,16 @@ module top();
     parameter   CLK_DOWN = 8;
 
     reg         Clk;
-    reg         iReset;
+    reg         iRst_n;
 
     initial
     begin
         Clk = 0;
+        iRst_n = 1;
+        @(posedge Clk)
+        iRst_n = 0;
+        @(negedge Clk)
+        iRst_n = 1;
     end
 
     always
@@ -18,6 +23,8 @@ module top();
         #CLK_UP
         Clk = 0;
     end
+
+    multicyc multicyc_inst(.iClk(Clk), .iRst_n(iRst_n));
 
     initial begin
         $dumpfile("v.lxt");

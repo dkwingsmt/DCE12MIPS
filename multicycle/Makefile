@@ -11,8 +11,35 @@ WAVEFILE_POSTFIX = .lxt
 
 ######################################################################
 # Project settings
-VERILOG_SRCFILE = testbench.v 
-VERILOG_DEPEND = tb1.v
+PERIDIR = ../peripheral/
+ALUDIR = ../alu/
+VERILOG_SRCFILE = testbench.v multicyc.v multicyc_core.v \
+				  $(PERIDIR)rom.v \
+				  $(PERIDIR)regfile.v \
+				  $(PERIDIR)DataMem.v \
+				  $(PERIDIR)Peripheral.v \
+				  $(ALUDIR)ALU.v \
+				  $(ALUDIR)ADD.v \
+				  $(ALUDIR)AND.v \
+				  $(ALUDIR)GEZ.v \
+				  $(ALUDIR)LEZ.v \
+				  $(ALUDIR)NOR.v \
+				  $(ALUDIR)SRA.v \
+				  $(ALUDIR)STA.v \
+				  $(ALUDIR)XOR.v \
+				  $(ALUDIR)EQ.v \
+				  $(ALUDIR)GTZ.v \
+				  $(ALUDIR)LT.v \
+				  $(ALUDIR)LUI.v \
+				  $(ALUDIR)NEQ.v \
+				  $(ALUDIR)OR.v \
+				  $(ALUDIR)SLL.v \
+				  $(ALUDIR)SRL.v \
+				  $(ALUDIR)SUB.v
+VERILOG_DEPEND = tb1.v \
+				 $(PERIDIR)DataMemInit.v \
+				 $(PERIDIR)InstRom.v \
+				 $(ALUDIR)isa_define.v 
 COMPILE_DST = v.out
 SIMULATE_OUTPUT = v.lxt
 SIMULATE_POSTFIX = .lxt
