@@ -18,9 +18,6 @@
 
     // ====== Instantialization ======
     // EX
-    assign PCBranchOffset = {{14{InstImmediate[15]}}, InstImmediate, 2'b00};
-    assign IStyleAluSrc1 = {{16{InstImmediate[15]}}, InstImmediate};
-    assign PCJumpTgt = {PCAddFour[31:28], InstJumpAddr, 2'b00};
 
     //MEM
     assign oRdWrMemAddr = AluOut;
@@ -30,11 +27,6 @@
     assign oRdInstAddr = PC;
 
     //WB
-    assign WrRegData = Link ? PCAddFour :
-                       CtrlMemtoReg ? iRdData : 
-                       AluOut;
-    assign RegWrite = CtrlRegWrite | Link;
-    assign Link = CtrlJLink | CtrlJRLink;
     assign DoBranch = CtrlBranch & ~(CtrlBranchEq ^ AluZero);
     assign PCNext = DoBranch ? PCBranchTgt :
                     CtrlJump ? PCJumpTgt :

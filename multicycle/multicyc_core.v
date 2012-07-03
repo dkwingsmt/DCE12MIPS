@@ -216,20 +216,37 @@ module multicyc_core(iClk,
     wire            ID_RdRegId1;/*S*/
     wire            ID_RdRegData1;/*S*/
 
-    reg [31:0]      IDEX_CtrlWb;
-    reg [31:0]      IDEX_CtrlMem;
-    reg [31:0]      IDEX_CtrlEx;
-    reg             IDEX_RdRegData0;
+    reg     [31:0]  IDEX_CtrlWb;
+    reg     [31:0]  IDEX_CtrlMem;
+    reg     [31:0]  IDEX_CtrlEx;
+    wire            IDEX_RdRegData0;
     reg             IDEX_RdRegData1;
+    /*
     reg             IDEX_CtrlALUOp;
     reg             IDEX_InstOpCode;
     reg             IDEX_InstFunct;
-    reg             IDEX_PCAddFour;
+    reg             IDEX_PCAddFour;*/
 
+    wire            EX_IStyleAluSrc1;/*S*/
     wire            EX_AluIn0;/*S*/
     wire            EX_AluIn1;/*S*/
+    wire            EX_WrRegId;/*S*/
+    wire            EX_RegWrite;/*S*/
+    wire            EX_Link;/*S*/
+    wire            EX_PCBranchOffset;/*S*/
+    wire            EX_PCJumpTgt;/*S*/
+    wire            EX_PCAddFour;
     wire            EX_CtrlALUShamt;
+    wire            EX_CtrlRegDst;
+    wire            EX_CtrlMemtoReg;
+    wire            EX_CtrlJLink;
+    wire            EX_CtrlJRLink;
+    wire            EX_CtrlRegWrite;
+    wire            EX_InstRd;
+    wire            EX_InstRt;
+    wire            EX_InstImmediate;
     wire            EX_InstShamt;
+    wire            EX_InstJumpAddr;
 
     reg             EXMEM_CtrlWb;/*S*/
     reg             EXMEM_CtrlMem;/*S*/
@@ -240,46 +257,12 @@ module multicyc_core(iClk,
 
     reg             MEMWB_CtrlWb;/*S*/
 
-    reg             WB_WrRegId;
-    reg             WB_WrRegData;
-    reg             WB_RegWrite;
-
-    // MEMWB
-    wire            w_CtrlRegDst;
-    wire            w_CtrlJump;
-    wire            w_CtrlJLink;
-
-    wire            w_CtrlBranch;
-    wire            w_CtrlBranchEq;
-    wire            w_CtrlMemRead;
-    wire            w_CtrlMemWrite;
-    wire            w_CtrlMemtoReg;
-    wire            w_CtrlRegWrite;
-    wire            w_CtrlALUSrc;
-    wire            w_CtrlALUOp;
-    wire            w_CtrlJR;
-    wire            w_CtrlJRLink;
-    wire            w_CtrlALUShamt;
-
-    reg             PC;
-    wire    [31:0]  w_PCAddFour;
-    wire    [31:0]  w_PCBranchOffset;
-    wire    [31:0]  w_PCBranchTgt;
-
-    wire            w_AluCtrl;
-    wire            w_AluSign;
-    wire            w_AluOut;
-    wire            w_AluZero;
-    wire            w_ALUOverflow
-    wire            w_ALUNegative
-
-    wire            w_RdRegId0;
-    wire            w_RdRegId1;
-    wire            w_RdRegData0;
-    wire            w_RdRegData1;
-    wire            w_WrRegId;
-    wire            w_WrRegData;
-    wire            w_RegWrite;
+    wire            WB_WrRegData;/*S*/
+    wire            WB_Link;
+    wire            WB_PCAddFour;
+    wire            WB_CtrlMemtoReg;
+    wire            WB_RdData;
+    wire            WB_AluOut;
 
     assign w_RdRegId0 = w_Inst;
     assign w_RdRegId1 = IFID_RdRegId1;
