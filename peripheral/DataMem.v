@@ -2,7 +2,7 @@
 `include "../peripheral/_SelectTest.v"
 
 module DataMem (reset_n,clk,rd,wr,addr,wdata,rdata,accessable,
-                switch, led, digi);
+                switch, led, digi,peri_irqout);
     input               reset_n;
     input               clk;
     input               rd;
@@ -14,8 +14,9 @@ module DataMem (reset_n,clk,rd,wr,addr,wdata,rdata,accessable,
     input       [7:0]   switch;
     output      [7:0]   led;
     output      [11:0]  digi;
+    output              peri_irqout;
 
-    wire        peri_irqout;
+//    wire        peri_irqout;
     wire [31:0] peri_rdata;
     wire        peri_racc;
     wire        peri_wacc;

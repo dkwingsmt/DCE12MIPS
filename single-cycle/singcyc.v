@@ -32,7 +32,9 @@ module singcyc( iClk,
                           .accessable(DataMemAccssable),
                           .switch(iSwitch),
                           .led(oLED),
-                          .digi(oDigi));
+                          .digi(oDigi),
+                          .peri_irqout(irqout));
+
 
     wire    [31:0]  RomAddr;
     wire    [31:0]  RomRdData;
@@ -53,6 +55,7 @@ module singcyc( iClk,
                            .oMemRead(DataMemRd), 
                            .oWrData(DataMemWrData), 
                            .iRdData(DataMemRdData),
+                           .iInterrupt(irqout),
                            ._iPCLoad(_PCLoad),
                            ._iPCLoadData(_PCLoadData),
                            ._oPC(_oPC),

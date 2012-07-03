@@ -50,6 +50,9 @@
 `define ALUCTRL_GEZ     6'b111001
 `define ALUCTRL_GTZ     6'b111111
 
+`define INTERRUPT_PC 32'h80000004
+`define INTERRUPT_REG 5'd26
+
 module singcyc_alu_ctrl(iAluOp,
                         iInstOp,
                         iFunct,
@@ -236,6 +239,7 @@ module singcyc_core(iClk,
                     oMemRead, 
                     oWrData, 
                     iRdData,
+                    iInterrupt,
                     _iPCLoad,
                     _iPCLoadData,
                     _oPC,
@@ -255,6 +259,7 @@ module singcyc_core(iClk,
     input       [31:0]  _iPCLoadData;
     output      [31:0]  _oPC;
     output      [31:0]  _oPCNext;
+    input               iInterrupt;
 
     //====== Essential ======
     reg     [31:0]  PC;
@@ -311,6 +316,7 @@ module singcyc_core(iClk,
     wire    [31:0]  PCNext;
     wire            DoBranch;
     wire            Link;
+    wire            BeginInterrupt;
 
     // ====== Instantialization ======
     assign InstOpCode    = iRdInst[31:26];
@@ -325,6 +331,8 @@ module singcyc_core(iClk,
     assign IStyleAluSrc1 = {{16{InstImmediate[15]}}, InstImmediate};
     assign PCBranchOffset = {{14{InstImmediate[15]}}, InstImmediate, 2'b00};
     assign PCJumpTgt = {PCAddFour[31:28], InstJumpAddr, 2'b00};
+
+    assign BeginInterrupt = (~PC[31])&iInterrupt;
 
     RegFile reg_inst(
         .clk(iClk),
@@ -384,13 +392,15 @@ module singcyc_core(iClk,
     assign Link = CtrlJLink | CtrlJRLink;
     assign RdRegId0 = InstRs;
     assign RdRegId1 = InstRt;
-    assign WrRegId = Link ? 5'd31 :
+    assign WrRegId = BeginInterrupt ? `INTERRUPT_REG :
+                     Link ? 5'd31 :
                      CtrlRegDst ? InstRd : 
                      InstRt;
-    assign WrRegData = Link ? PCAddFour :
+    assign WrRegData = BeginInterrupt ? PC :
+                       Link ? PCAddFour :
                        CtrlMemtoReg ? iRdData : 
                        AluOut;
-    assign RegWrite = CtrlRegWrite | Link;
+    assign RegWrite = BeginInterrupt | CtrlRegWrite | Link;
 
     assign AluIn0 = CtrlALUShamt ? {{27{1'b0}}, InstShamt} :
                     RdRegData0;
@@ -400,11 +410,12 @@ module singcyc_core(iClk,
 
     assign oRdWrMemAddr = AluOut;
     assign oWrData = RdRegData1;
-    assign oMemWrite = CtrlMemWrite;
+    assign oMemWrite = (~BeginInterrupt) & CtrlMemWrite;
     assign oMemRead = CtrlMemRead;
     assign oRdInstAddr = PC;
 
-    assign PCNext = DoBranch ? PCBranchTgt :
+    assign PCNext = BeginInterrupt ? `INTERRUPT_PC :
+                    DoBranch ? PCBranchTgt :
                     CtrlJump ? PCJumpTgt :
                     CtrlJR ? RdRegData0 : 
                                PCAddFour;
