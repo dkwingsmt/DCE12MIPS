@@ -216,44 +216,70 @@ module multicyc_core(iClk,
     wire            ID_RdRegId1;/*S*/
     wire            ID_RdRegData1;/*S*/
 
+    wire            ID_CtrlRegDst;/*S*/
+    wire            ID_CtrlJump;/*S*/
+    wire            ID_CtrlJLink;/*S*/
+    wire            ID_CtrlBranch;/*S*/
+    wire            ID_CtrlBranchEq;/*S*/
+    wire            ID_CtrlMemRead;/*S*/
+    wire            ID_CtrlMemWrite;/*S*/
+    wire            ID_CtrlMemtoReg;/*S*/
+    wire            ID_CtrlRegWrite;/*S*/
+    wire            ID_CtrlALUSrc;/*S*/
+    wire            ID_CtrlALUOp;/*S*/
+
     reg     [31:0]  IDEX_CtrlWb;
     reg     [31:0]  IDEX_CtrlMem;
     reg     [31:0]  IDEX_CtrlEx;
     wire            IDEX_RdRegData0;
     reg             IDEX_RdRegData1;
-    /*
+
     reg             IDEX_CtrlALUOp;
     reg             IDEX_InstOpCode;
     reg             IDEX_InstFunct;
-    reg             IDEX_PCAddFour;*/
+    //reg             IDEX_PCAddFour;
 
     wire            EX_IStyleAluSrc1;/*S*/
-    wire            EX_AluIn0;/*S*/
-    wire            EX_AluIn1;/*S*/
     wire            EX_WrRegId;/*S*/
     wire            EX_RegWrite;/*S*/
     wire            EX_Link;/*S*/
     wire            EX_PCBranchOffset;/*S*/
     wire            EX_PCJumpTgt;/*S*/
     wire            EX_PCAddFour;
+    wire            EX_DoBranch;/*S*/
+    wire            EX_PCNext;/*S*/
+    wire            EX_PCBranchTgt;
+    wire            EX_RdRegData0;
 
-    wire            ID_CtrlRegDst;
-    wire            ID_CtrlJump;
-    wire            ID_CtrlJLink;
-    wire            ID_CtrlBranch;
-    wire            ID_CtrlBranchEq;
-    wire            ID_CtrlMemRead;
-    wire            ID_CtrlMemWrite;
-    wire            ID_CtrlMemtoReg;
-    wire            ID_CtrlRegWrite;
-    wire            ID_CtrlALUSrc;
-    wire            ID_CtrlALUOp;
+    wire            EX_AluOP;/*S*/
+    wire            EX_InstOp;/*S*/
+    wire            EX_AluFunct;/*S*/
 
+    wire            EX_AluIn0;/*S*/
+    wire            EX_AluIn1;/*S*/
     wire            EX_AluCtrl;
     wire            EX_AluSign;
-    wire            EX_CtrlJR;
-    wire            EX_CtrlJRLink;
-    wire            EX_CtrlALUShamt;
+    wire            EX_AluOut;/*S*/
+    wire            EX_AluZero;/*S*/
+    wire            EX_ALUOverflow;/*S*/
+    wire            EX_ALUNegative;/*S*/
+
+    wire            EX_CtrlBranch;
+    wire            EX_CtrlBranchEq;
+    wire            EX_CtrlRegDst;
+    wire            EX_CtrlMemtoReg;
+    wire            EX_CtrlJump;
+    wire            EX_CtrlJLink;
+    wire            EX_CtrlRegWrite;
+
+    wire            EX_AluOp;
+    wire            EX_InstOp;
+    wire            EX_AluFunct;
+    wire            EX_AluCtrl;/*S*/
+    wire            EX_AluSign;/*S*/
+    wire            EX_CtrlJR;/*S*/
+    wire            EX_CtrlJRLink;/*S*/
+    wire            EX_CtrlALUShamt;/*S*/
 
     wire            EX_InstRd;
     wire            EX_InstRt;
@@ -264,6 +290,10 @@ module multicyc_core(iClk,
     reg             EXMEM_CtrlWb;/*S*/
     reg             EXMEM_CtrlMem;/*S*/
 
+    wire            MEM_RdWrMemAddr;
+    wire            MEM_RdRegData1;
+    wire            MEM_CtrlMemWrite;
+    wire            MEM_CtrlMemRead;
     wire            MEM_WrRegId;/*S*/
     wire            MEM_WrRegData;
     wire            MEM_RegWrite;
@@ -342,17 +372,10 @@ module multicyc_core(iClk,
         .oALUSrc    (ID_CtrlALUSrc),
         .oALUOp     (ID_CtrlALUOp));
 
-    wire            w_AluOP;
-    wire            w_InstOp;
-    wire            w_AluFunct;
-    assign w_AluOp = IDEX_CtrlALUOp;
-    assign w_InstOp = IDEX_InstOpCode;
-    assign w_AluFunct = IDEX_InstFunct;
-
     multicyc_alu_ctrl alu_ctrl_inst(
-        .iAluOp     (w_AluOp),
-        .iInstOp    (w_InstOp),
-        .iFunct     (w_AluFunct),
+        .iAluOp     (EX_AluOp),
+        .iInstOp    (EX_InstOp),
+        .iFunct     (EX_AluFunct),
         .oAluCtrl   (EX_AluCtrl),
         .oSign      (EX_AluSign),
         .oJR        (EX_CtrlJR),
@@ -370,14 +393,14 @@ module multicyc_core(iClk,
         .S(w_PCBranchTgt));
 
     ALU alu_inst(
-        .iA     (w_AluIn0),
-        .iB     (w_AluIn1),
-        .iALUFun(w_AluCtrl),
-        .iSign  (w_AluSign),
-        .oS     (w_AluOut),
-        .oZ     (w_AluZero),
-        .oV     (w_ALUOverflow),
-        .oN     (w_ALUNegative));
+        .iA     (EX_AluIn0),
+        .iB     (EX_AluIn1),
+        .iALUFun(EX_AluCtrl),
+        .iSign  (EX_AluSign),
+        .oS     (EX_AluOut),
+        .oZ     (EX_AluZero),
+        .oV     (EX_ALUOverflow),
+        .oN     (EX_ALUNegative));
 
 
     always @(posedge iClk or negedge iRst_n)
