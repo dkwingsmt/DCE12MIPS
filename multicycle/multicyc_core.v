@@ -209,16 +209,17 @@ module multicyc_core(iClk,
 
     reg             PC;
 
-    wire            IF_PCAddFour;/*S*/
+    wire    [31:0]  IF_PCAddFour;/*S*/
 
-    reg             IFID_Inst;/*S*/
+    reg     [31:0]  IFID_PCAddFour;/*S*/
+    reg     [31:0]  IFID_Inst;/*S*/
 
-    wire            ID_InstRs;
-    wire            ID_InstRt;
-    wire            ID_RdRegId0;/*S*/
-    wire            ID_RdRegData0;/*S*/
-    wire            ID_RdRegId1;/*S*/
-    wire            ID_RdRegData1;/*S*/
+    wire    [4:0]   ID_InstRs;/*S*/
+    wire    [4:0]   ID_InstRt;/*S*/
+    wire    [4:0]   ID_RdRegId0;/*S*/
+    wire    [31:0]  ID_RdRegData0;/*S*/
+    wire    [4:0]   ID_RdRegId1;/*S*/
+    wire    [31:0]  ID_RdRegData1;/*S*/
 
     wire            ID_CtrlRegDst;/*S*/
     wire            ID_CtrlJump;/*S*/
@@ -230,18 +231,16 @@ module multicyc_core(iClk,
     wire            ID_CtrlMemtoReg;/*S*/
     wire            ID_CtrlRegWrite;/*S*/
     wire            ID_CtrlALUSrc;/*S*/
-    wire            ID_CtrlALUOp;/*S*/
+    wire    [1:0]   ID_CtrlALUOp;/*S*/
 
-    reg     [31:0]  IDEX_CtrlWb;
-    reg     [31:0]  IDEX_CtrlMem;
-    reg     [31:0]  IDEX_CtrlEx;
+    reg     [31:0]  IDEX_Inst;/*S*/
+    reg     [9:0]   IDEX_CtrlWb;/*S*/
+    reg     [31:0]  IDEX_CtrlMem;/*S*/
+    reg     [31:0]  IDEX_CtrlEx;/*S*/
     reg     [31:0]  IDEX_RdRegData0;/*S*/
     reg     [31:0]  IDEX_RdRegData1;/*S*/
 
-    reg             IDEX_CtrlALUOp;
-    reg             IDEX_InstOpCode;
-    reg             IDEX_InstFunct;
-    //reg             IDEX_PCAddFour;
+    reg     [31:0]  IDEX_PCAddFour;/*S*/
 
     wire    [31:0]  EX_IStyleAluSrc1;/*S*/
     wire    [4:0]   EX_WrRegId;/*S*/
@@ -250,105 +249,71 @@ module multicyc_core(iClk,
     wire    [31:0]  EX_PCBranchOffset;/*S*/
     wire    [31:0]  EX_PCBranchTgt;/*S*/
     wire    [31:0]  EX_PCJumpTgt;/*S*/
-    wire    [31:0]  EX_PCAddFour;
     wire            EX_DoBranch;/*S*/
     wire    [31:0]  EX_PCNext;/*S*/
 
-    wire            EX_AluOP;/*S*/
-    wire            EX_InstOp;/*S*/
-    wire            EX_AluFunct;/*S*/
-
     wire            EX_AluIn0;/*S*/
     wire            EX_AluIn1;/*S*/
-    wire            EX_AluCtrl;
-    wire            EX_AluSign;
     wire            EX_AluOut;/*S*/
     wire            EX_AluZero;/*S*/
     wire            EX_ALUOverflow;/*S*/
     wire            EX_ALUNegative;/*S*/
 
-    wire            EX_CtrlBranch;
-    wire            EX_CtrlBranchEq;
-    wire            EX_CtrlRegDst;
-    wire            EX_CtrlMemtoReg;
-    wire            EX_CtrlJump;
-    wire            EX_CtrlJLink;
-    wire            EX_CtrlRegWrite;
-    wire            EX_CtrlALUSrc;
+    wire            EX_CtrlRegDst;/*S*/
+    wire            EX_CtrlRegWrite;/*S*/
+    wire            EX_CtrlALUSrc;/*S*/
+    wire    [1:0]   EX_CtrlALUOp;/*S*/
+    wire            EX_CtrlMemtoReg;/*S*/
+    wire            EX_CtrlBranch;/*S*/
+    wire            EX_CtrlBranchEq;/*S*/
+    wire            EX_CtrlJump;/*S*/
+    wire            EX_CtrlJLink;/*S*/
 
-    wire            EX_AluOp;
-    wire            EX_InstOp;
-    wire            EX_AluFunct;
+    wire            EX_AluOp;/*S*/
+    wire            EX_InstOp;/*S*/
+    wire            EX_AluFunct;/*S*/
     wire            EX_AluCtrl;/*S*/
     wire            EX_AluSign;/*S*/
     wire            EX_CtrlJR;/*S*/
     wire            EX_CtrlJRLink;/*S*/
     wire            EX_CtrlALUShamt;/*S*/
 
-    wire            EX_InstRd;
-    wire            EX_InstRt;
-    wire            EX_InstImmediate;
-    wire            EX_InstShamt;
-    wire            EX_InstJumpAddr;
+    wire            EX_InstRd;/*S*/
+    wire            EX_InstRt;/*S*/
+    wire            EX_InstImmediate;/*S*/
+    wire            EX_InstShamt;/*S*/
+    wire            EX_InstJumpAddr;/*S*/
 
     reg             EXMEM_CtrlWb;/*S*/
     reg             EXMEM_CtrlMem;/*S*/
+    reg     [31:0]  EXMEM_AluOut;/*S*/
+    reg     [31:0]  EXMEM_RdRegData1;/*S*/
+    reg     [4:0]   EXMEM_WrRegId;/*S*/
+    reg             EXMEM_RegWrite;/*S*/
+    reg             EXMEM_Link;/*S*/
+    reg             EXMEM_PCAddFour;/*S*/
 
-    wire            MEM_RdWrMemAddr;
-    wire            MEM_RdRegData1;
-    wire            MEM_CtrlMemWrite;
-    wire            MEM_CtrlMemRead;
+    wire    [31:0]  MEM_RdWrMemAddr;/*S*/
+    wire    [31:0]  MEM_MemWrData;/*S*/
+    wire            MEM_CtrlMemWrite;/*S*/
+    wire            MEM_CtrlMemRead;/*S*/
 
     reg     [31:0]  MEMWB_MemReadData;/*S*/
     reg             MEMWB_CtrlWb;/*S*/
+    reg     [4:0]   MEMWB_WrRegId;/*S*/
+    reg             MEMWB_RegWrite;/*S*/
+    reg             MEMWB_Link;/*S*/
+    reg             MEMWB_PCAddFour;/*S*/
+    reg     [31:0]  MEMWB_AluOut;/*S*/
 
-    wire            WB_WrRegId;
-    wire            WB_RegWrite;
-    wire            WB_WrRegData;/*S*/
-    wire            WB_Link;
-    wire            WB_PCAddFour;
-    wire            WB_CtrlMemtoReg;
-    wire            WB_RdData;
-    wire            WB_AluOut;
-
-    // MEMWB
-    wire            w_CtrlJump;
-
-    wire            w_CtrlBranch;
-    wire            w_CtrlBranchEq;
-    wire            w_CtrlMemRead;
-    wire            w_CtrlMemWrite;
-    wire            w_CtrlMemtoReg;
-    wire            w_CtrlRegWrite;
-    wire            w_CtrlALUSrc;
-    wire            w_CtrlALUOp;
-    wire            w_CtrlJR;
-    wire            w_CtrlALUShamt;
-
-    wire    [31:0]  w_PCAddFour;
-    wire    [31:0]  w_PCBranchOffset;
-    wire    [31:0]  w_PCBranchTgt;
-
-    wire            w_AluCtrl;
-    wire            w_AluSign;
-    wire            w_AluOut;
-    wire            w_AluZero;
-    wire            w_ALUOverflow
-    wire            w_ALUNegative
-
-    wire            w_RdRegId0;
-    wire            w_RdRegId1;
-    wire            w_RdRegData0;
-    wire            w_RdRegData1;
-    wire            w_WrRegId;
-    wire            w_WrRegData;
-    wire            w_RegWrite;
-
-    assign w_RdRegId0 = w_Inst;
-    assign w_RdRegId1 = IFID_RdRegId1;
-    assign w_WrRegId = MEMWB_WrRegId;
-    assign w_WrRegData = MEMWB_WrRegData;
-    assign w_RegWrite = MEMWB_RegWrite;
+    wire    [4:0]   WB_WrRegId;/*S*/
+    wire            WB_RegWrite;/*S*/
+    wire    [31:0]  WB_WrRegData;/*S*/
+    wire            WB_Link;/*S*/
+    wire    [31:0]  WB_PCAddFour;/*S*/
+    wire            WB_CtrlMemtoReg;/*S*/
+    wire    [31:0]  WB_RdData;/*S*/
+    wire    [31:0]  WB_AluOut;/*S*/
 
     RegFile reg_inst(
         .clk    (iClk),
