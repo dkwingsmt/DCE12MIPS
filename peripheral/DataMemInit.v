@@ -54,3 +54,21 @@ global_data[12] <= 32'h00000012;
 global_data[13] <= 32'h00000063;
 global_data[14] <= 32'h0000002f;
 `endif
+`ifdef __TESTDIGI__
+
+global_data[0] <= 32'h00000040;
+global_data[1] <= 32'h00000079;
+global_data[2] <= 32'h00000024;
+global_data[3] <= 32'h00000030;
+global_data[4] <= 32'h00000019;
+global_data[5] <= 32'h00000012;
+global_data[6] <= 32'h00000002;
+global_data[7] <= 32'h00000078;
+global_data[8] <= 32'h00000000;
+global_data[9] <= 32'h00000010;
+global_data[10] <= 32'h00000006;
+global_data[11] <= 32'h00000027;
+global_data[12] <= 32'h00000012;
+global_data[13] <= 32'h00000063;
+global_data[14] <= 32'h0000002f;
+`endif
