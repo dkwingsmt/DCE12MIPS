@@ -29,7 +29,7 @@ always@(negedge reset or posedge clk) begin
 		TL <= 32'b0;
 		TCON <= 3'b0;	
 		rdata <= 32'b0;
-        //led <= 8'b0;
+        led <= 8'b0;
         digi <= 12'b0;
 	end
 	else begin
