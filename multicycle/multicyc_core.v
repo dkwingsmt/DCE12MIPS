@@ -251,6 +251,9 @@ module multicyc_core(iClk,
     wire            EX_DoBranch;/*S*/
     wire    [31:0]  EX_PCNext;/*S*/
 
+    // AluInRaw: When forwarding is not considered.
+    reg     [31:0]  EX_AluIn0Raw;/*S*/
+    reg     [31:0]  EX_AluIn1Raw;/*S*/
     wire    [31:0]  EX_AluIn0;/*S*/
     wire    [31:0]  EX_AluIn1;/*S*/
     wire    [31:0]  EX_AluOut;/*S*/
@@ -277,12 +280,21 @@ module multicyc_core(iClk,
     wire            EX_CtrlJRLink;/*S*/
     wire            EX_CtrlALUShamt;/*S*/
 
-    wire    [4:0]   EX_InstRd;/*S*/
+    wire    [4:0]   EX_InstRs;/*S*/
     wire    [4:0]   EX_InstRt;/*S*/
+    wire    [4:0]   EX_InstRd;/*S*/
     wire    [15:0]  EX_InstImmediate;/*S*/
     wire    [4:0]   EX_InstShamt;/*S*/
     wire    [26:0]  EX_InstJumpAddr;/*S*/
 
+    // AluSrc: 00 as non-forward, 10 from EXMEM, 01 from MEMWB
+    wire    [1:0]   EX_FWD_AluSrc0;/*S*/
+    wire    [1:0]   EX_FWD_AluSrc1;/*S*/
+    // RegSrcFlag: 0 if not from reg; 1 elsewise
+    reg             EX_FWD_AluRegSrcFlag0;/*S*/
+    reg             EX_FWD_AluRegSrcFlag1;/*S*/
+
+    reg     [31:0]  EXMEM_Inst;/*S*/
     reg             EXMEM_CtrlWb;/*S*/
     reg     [1:0]   EXMEM_CtrlMem;/*S*/
     reg     [31:0]  EXMEM_AluOut;/*S*/
@@ -299,8 +311,9 @@ module multicyc_core(iClk,
     wire            MEM_CtrlMemWrite;/*S*/
     wire            MEM_CtrlMemRead;/*S*/
 
-    reg     [31:0]  MEMWB_MemReadData;/*S*/
+    reg     [31:0]  MEMWB_Inst;/*S*/
     reg             MEMWB_CtrlWb;/*S*/
+    reg     [31:0]  MEMWB_MemReadData;/*S*/
     reg     [4:0]   MEMWB_WrRegId;/*S*/
     reg             MEMWB_RegWrite;/*S*/
     reg             MEMWB_Link;/*S*/
@@ -391,6 +404,7 @@ module multicyc_core(iClk,
     assign EX_CtrlJLink     = IDEX_CtrlEx[0];
 
     assign EX_InstOp = IDEX_Inst[31:26];
+    assign EX_InstRs = IDEX_Inst[25:21];
     assign EX_InstRt = IDEX_Inst[20:16];
     assign EX_InstRd = IDEX_Inst[15:11];
     assign EX_InstShamt = IDEX_Inst[10:6];
@@ -400,10 +414,26 @@ module multicyc_core(iClk,
 
     assign EX_AluOp = EX_CtrlALUOp;
 
-    assign EX_AluIn0 = EX_CtrlALUShamt ? {{27{1'b0}}, EX_InstShamt} :
-                    IDEX_RdRegData0;
-    assign EX_AluIn1 = EX_CtrlALUSrc ? EX_IStyleAluSrc1 : 
-                    IDEX_RdRegData1;
+    always @(EX_CtrlALUShamt, EX_InstShamt, IDEX_RdRegData0, IDEX_RdRegData1,
+                EX_CtrlALUSrc, EX_IStyleAluSrc1)
+    begin
+        EX_FWD_AluRegSrcFlag0 = 1'b0;
+        EX_FWD_AluRegSrcFlag1 = 1'b0;
+        if(EX_CtrlALUShamt)
+            EX_AluIn0Raw = {{27{1'b0}}, EX_InstShamt};
+        else
+        begin
+            EX_AluIn0Raw = IDEX_RdRegData0;
+            EX_FWD_AluRegSrcFlag0 = 1'b1;
+        end
+        if(EX_CtrlALUSrc)
+            EX_AluIn1Raw = EX_IStyleAluSrc1;
+        else
+        begin
+            EX_AluIn1Raw = IDEX_RdRegData1;
+            EX_FWD_AluRegSrcFlag1 = 1'b1;
+        end
+    end
 
     assign EX_IStyleAluSrc1 = {{16{EX_InstImmediate[15]}}, EX_InstImmediate};
     assign EX_WrRegId = EX_Link ? 5'd31 :
@@ -420,6 +450,33 @@ module multicyc_core(iClk,
                        EX_CtrlJR ? IDEX_RdRegData0 : 
                                    IDEX_PCAddFour;
 
+    assign EX_FWD_AluSrc0 = (EXMEM_RegWrite 
+                             & EX_FWD_AluRegSrcFlag0
+                             & (EXMEM_WrRegId != 5'b0)
+                             & (EXMEM_WrRegId == EX_InstRs)) 
+                                                                ? 2'b10 :
+                            (MEMWB_RegWrite 
+                             & EX_FWD_AluRegSrcFlag0
+                             & (MEMWB_WrRegId != 5'b0)
+                             & (MEMWB_WrRegId != EXMEM_WrRegId)
+                             & (MEMWB_WrRegId == EX_InstRs)) 
+                                                                ? 2'b01 :
+                            2'b00;
+    assign EX_AluIn0 = (EX_FWD_AluSrc0 == 2'b00) ? EX_AluIn0Raw :
+                       (EX_FWD_AluSrc0 == 2'b10) ? EXMEM :
+    assign EX_FWD_AluSrc1 = (EXMEM_RegWrite 
+                             & EX_FWD_AluRegSrcFlag1
+                             & (EXMEM_WrRegId != 5'b0)
+                             & (EXMEM_WrRegId == EX_InstRt)) 
+                                                                ? 2'b10 :
+                            (MEMWB_RegWrite 
+                             & EX_FWD_AluRegSrcFlag1
+                             & (MEMWB_WrRegId != 5'b0)
+                             & (MEMWB_WrRegId != EXMEM_WrRegId)
+                             & (MEMWB_WrRegId == EX_InstRt)) 
+                                                                ? 2'b01 :
+                            2'b00;
+
     assign MEM_CtrlMemWrite = EXMEM_CtrlMem[1];
     assign MEM_CtrlMemRead = EXMEM_CtrlMem[0];
     assign MEM_RdWrMemAddr = EXMEM_AluOut;
@@ -434,9 +491,9 @@ module multicyc_core(iClk,
     assign WB_Link = MEMWB_Link;
     assign WB_PCAddFour = MEMWB_PCAddFour;
     assign WB_CtrlMemtoReg = MEMWB_CtrlWb;
-    assign WB_WrRegData = WB_Link ? WB_PCAddFour :
-                       WB_CtrlMemtoReg ? MEMWB_MemReadData :  
-                       WB_AluOut;
+    assign WB_WrRegData = WB_CtrlMemtoReg ? MEMWB_MemReadData : 
+                          WB_Link ? WB_PCAddFour :
+                          WB_AluOut;
     assign WB_RdData = MEMWB_MemReadData;
     assign WB_AluOut = MEMWB_AluOut;
 
@@ -472,6 +529,7 @@ module multicyc_core(iClk,
                             };
             IDEX_CtrlWb <= WB_CtrlMemtoReg;
 
+            //EXMEM_Inst <= IDEX_Inst;
             EXMEM_AluOut <= EX_AluOut;
             EXMEM_RdRegData1 <= IDEX_RdRegData1;
             EXMEM_CtrlWb <= IDEX_CtrlWb;
@@ -482,6 +540,7 @@ module multicyc_core(iClk,
             EXMEM_PCAddFour <= IDEX_PCAddFour;
             EXMEM_PCNext <= EX_PCNext;
 
+            //MEMWB_Inst <= EXMEM_Inst;
             MEMWB_MemReadData <= iRdData;
             MEMWB_CtrlWb <= EXMEM_CtrlWb;
             MEMWB_WrRegId <= EXMEM_WrRegId;
