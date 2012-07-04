@@ -29,7 +29,7 @@
     assign EX_DoBranch = EX_CtrlBranch & ~(EX_CtrlBranchEq ^ EX_AluZero);
     assign EX_PCNext = EX_DoBranch ? EX_PCBranchTgt :
                     EX_CtrlJump ? EX_PCJumpTgt :
-                    EX_CtrlJR ? EX_RdRegData0 : 
+                    EX_CtrlJR ? IDEX_RdRegData0 : 
                                EX_PCAddFour;
 
     EXMEM_CtrlWb <= IDEX_CtrlWb;
@@ -40,6 +40,7 @@
     assign oMemWrite = MEM_CtrlMemWrite;
     assign oMemRead = MEM_CtrlMemRead;
 
+    MEMWB_MemReadData <= iRdData;
     MEMWB_CtrlWb <= EXMEM_CtrlWb;
 
     assign WB_WrRegData = WB_Link ? WB_PCAddFour :
