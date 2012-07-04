@@ -3,6 +3,7 @@
 ######################################################################
 # Tool settings
 IVERILOG_EXE = iverilog
+OTHER_IVERILOG_OPT = -Wall
 VVP_EXE = vvp
 GTKWAVE_EXE = gtkwave
 VVP_PREFLAGS = -n
@@ -69,7 +70,7 @@ endif
 	$(GTKWAVE_EXE) $(WAVE_DST)
 
 $(COMPILE_DST) : $(VERILOG_SRCFILE) $(VERILOG_DEPEND)
-	$(IVERILOG_EXE) -o $(COMPILE_DST) $(VERILOG_SRCFILE)
+	$(IVERILOG_EXE) $(OTHER_IVERILOG_OPT) -o $(COMPILE_DST) $(VERILOG_SRCFILE)
 
 $(SIMULATE_OUTPUT) : $(COMPILE_DST)
 	$(VVP_EXE) $(VVP_PREFLAGS) $(COMPILE_DST) $(VVP_POSTFLAGS)
