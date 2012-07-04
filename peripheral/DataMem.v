@@ -40,10 +40,10 @@ module DataMem (reset_n,clk,rd,wr,addr,wdata,rdata,accessable,
     reg [31:0] global_data [GLOBAL_SIZE-1:0];
     reg [31:0] stack_data [12'hfff:12'hfff+1-STACK_SIZE];
 
-    wire [31:12] upper_addr;
+    wire [30:12] upper_addr;
     wire [11:2]  eff_addr;
     wire [1:0]   lower_addr;
-    assign upper_addr = addr[31:12];
+    assign upper_addr = addr[30:12];
     assign eff_addr = addr[11:2];
     assign lower_addr = addr[1:0];
     reg r_acc;
@@ -51,33 +51,40 @@ module DataMem (reset_n,clk,rd,wr,addr,wdata,rdata,accessable,
 
     always @(*)
     begin
-        r_acc = 1'b0;
-        rdata = 32'b0; 
-        if(lower_addr == 2'b00)
+        if(rd)
         begin
-            case(upper_addr)
-            20'h10010: begin
-                if(eff_addr < GLOBAL_SIZE)
-                begin
-                    rdata = global_data[eff_addr];
-                    r_acc = 1'b1;
+            r_acc = 1'b0;
+            rdata = 32'hcdcdcdcd; 
+            if(lower_addr == 2'b00)
+            begin
+                case(upper_addr)
+                19'b001_0000_0000_0001_0000: begin
+                    if(eff_addr < GLOBAL_SIZE)
+                    begin
+                        rdata = global_data[eff_addr];
+                        r_acc = 1'b1;
+                    end
                 end
-            end
-            20'h7ffff: begin
-                if(eff_addr < STACK_SIZE)
-                begin
-                    rdata = stack_data[eff_addr];
-                    r_acc = 1'b1;
+                19'b111_1111_1111_1111_1111: begin
+                    if(eff_addr < STACK_SIZE)
+                    begin
+                        rdata = stack_data[eff_addr];
+                        r_acc = 1'b1;
+                    end
                 end
-            end
-            20'h40000: begin
-                r_acc = peri_racc;
-                if(peri_racc)
-                begin
-                    rdata = peri_rdata;
+                19'b100_0000_0000_0000_0000: begin
+                    r_acc = peri_racc;
+                    if(peri_racc)
+                    begin
+                        rdata = peri_rdata;
+                    end
                 end
+                default: begin
+                    r_acc = 1'b0;
+                    rdata = 32'hcccccccc;
+                end
+                endcase
             end
-            endcase
         end
     end
 
@@ -92,21 +99,21 @@ module DataMem (reset_n,clk,rd,wr,addr,wdata,rdata,accessable,
             if(lower_addr == 2'b00)
             begin
                 case(upper_addr)
-                20'h10010: begin
+                19'h10010: begin
                     if(eff_addr < GLOBAL_SIZE)
                     begin
                         global_data[eff_addr] <= wdata;
                         w_acc <= 1'b1;
                     end
                 end
-                20'h7ffff: begin
+                19'h7ffff: begin
                     if(eff_addr < STACK_SIZE)
                     begin
                         stack_data[eff_addr] <= wdata;
                         w_acc <= 1'b1;
                     end
                 end
-                20'h40000: begin
+                19'h40000: begin
                     w_acc <= peri_wacc;
                 end
                 endcase

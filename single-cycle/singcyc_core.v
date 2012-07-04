@@ -313,6 +313,7 @@ module singcyc_core(iClk,
     wire    [31:0]  PCBranchOffset;
     wire    [31:0]  PCBranchTgt;
     wire    [31:0]  PCJumpTgt;
+    wire    [31:0]  PCNextRaw;
     wire    [31:0]  PCNext;
     wire            DoBranch;
     wire            Link;
@@ -414,17 +415,19 @@ module singcyc_core(iClk,
     assign oMemRead = CtrlMemRead;
     assign oRdInstAddr = PC;
 
-    assign PCNext = BeginInterrupt ? `INTERRUPT_PC :
-                    DoBranch ? PCBranchTgt :
-                    CtrlJump ? PCJumpTgt :
-                    CtrlJR ? RdRegData0 : 
+    assign PCNextRaw  = BeginInterrupt ? `INTERRUPT_PC :
+                        DoBranch ? PCBranchTgt :
+                        CtrlJump ? PCJumpTgt :
+                        CtrlJR ? RdRegData0 : 
                                PCAddFour;
+    assign PCNext = (BeginInterrupt|CtrlJR) ? PCNextRaw :
+                    {PC[31],PCNextRaw[30:0]};
 
     always @(posedge iClk or negedge iRst_n)
     begin
         if(~iRst_n)
         begin
-            PC <= 32'h00000000;
+            PC <= 32'h00400000;
         end
         else
             if(_iPCLoad)

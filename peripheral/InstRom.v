@@ -55,3 +55,6 @@
 14'h002e:    data = 32'hac620000;
 14'h002f:    data = 32'h08100028;
 `endif
+`ifdef __TESTGCD__
+`include "../asmblr/script/gcd_text.v"
+`endif

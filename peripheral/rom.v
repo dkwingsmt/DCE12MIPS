@@ -14,17 +14,17 @@ module ROM (addr,data,accessable);
         data = 32'h00000000;
         if(addr[1:0] == 2'b00)
         begin
-            if(addr[31:8] == 24'h000000)
+            if(addr[30:8] == 23'h000000)
             begin
                 accessable = 1'b1;
                 case(addr[7:2])
                     6'h00:      data = 32'h3c110040;   // lui $17, 0x0040
-                    6'h01:      data = 32'h26310000;   // addiu $17, 0
+                    6'h01:      data = 32'h08100056;   // addiu $17, 0
                     6'h02:      data = 32'h02200008;   // jr $17
                     default: accessable <= 1'b0;
                 endcase
             end
-            else if(addr[31:16] == 16'h0040)
+            else if(addr[30:16] == 15'h0040)
             begin
                 accessable = 1'b1;
                 case(addr[15:2])

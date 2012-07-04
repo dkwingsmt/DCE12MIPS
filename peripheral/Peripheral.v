@@ -23,12 +23,29 @@ reg [31:0] TH,TL;
 reg [2:0] TCON;
 assign irqout = TCON[2];
 
+always@(*) begin
+    if(rd) begin
+        r_accessible = 1'b1;
+        case(addr[30:0])
+            31'h40000000: rdata = TH;			
+            31'h40000004: rdata = TL;			
+            31'h40000008: rdata = {29'b0,TCON};				
+            31'h40000010: rdata = {24'b0,led};			
+            31'h40000014: rdata = {24'b0,switch};
+            31'h40000018: rdata = {20'b0,digi};
+            default: begin
+                rdata = 32'hcdcdcdcd;
+                r_accessible = 1'b0;
+            end
+        endcase
+    end
+end
+
 always@(negedge reset or posedge clk) begin
 	if(~reset) begin
 		TH <= 32'b0;
 		TL <= 32'b0;
 		TCON <= 3'b0;	
-		rdata <= 32'b0;
         //led <= 8'b0;
         digi <= 12'b0;
 	end
@@ -43,28 +60,13 @@ always@(negedge reset or posedge clk) begin
 		
 		if(wr) begin
             w_accessible <= 1'b1;
-			case(addr)
-				32'h40000000: TH <= wdata;
-				32'h40000004: TL <= wdata;
-				32'h40000008: TCON <= wdata[2:0];		
-				32'h40000010: led <= wdata[7:0];			
-				32'h40000018: digi <= wdata[11:0];
+			case(addr[30:0])
+				31'h40000000: TH <= wdata;
+				31'h40000004: TL <= wdata;
+				31'h40000008: TCON <= wdata[2:0];		
+				31'h40000010: led <= wdata[7:0];			
+				31'h40000018: digi <= wdata[11:0];
                 default: w_accessible <= 1'b0;
-			endcase
-		end
-		else if(rd) begin
-            r_accessible <= 1'b1;
-			case(addr)
-				32'h40000000: rdata <= TH;			
-				32'h40000004: rdata <= TL;			
-				32'h40000008: rdata <= {29'b0,TCON};				
-				32'h40000010: rdata <= {24'b0,led};			
-				32'h40000014: rdata <= {24'b0,switch};
-				32'h40000018: rdata <= {20'b0,digi};
-                default: begin
-                    rdata <= 32'b0;
-                    r_accessible <= 1'b0;
-                end
 			endcase
 		end
 	end

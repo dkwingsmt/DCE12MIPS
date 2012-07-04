@@ -5,9 +5,10 @@ module top();
 
     reg         Clk;
     reg         iRst_n;
-
+    reg  [7:0]  switch;
     initial
     begin
+        switch = 8'hfc;
         Clk = 0;
         iRst_n = 1;
         @(posedge Clk)
@@ -24,7 +25,7 @@ module top();
         Clk = 0;
     end
 
-    singcyc singcyc_inst(.iClk(Clk), .iRst_n(iRst_n));
+    singcyc singcyc_inst(.iClk(Clk), .iRst_n(iRst_n),.iSwitch(switch));
 
     initial begin
         $dumpfile("v.lxt");
