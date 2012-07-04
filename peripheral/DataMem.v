@@ -51,40 +51,37 @@ module DataMem (reset_n,clk,rd,wr,addr,wdata,rdata,accessable,
 
     always @(*)
     begin
-        if(rd)
+        r_acc = 1'b0;
+        rdata = 32'hcdcdcdcd; 
+        if(lower_addr == 2'b00)
         begin
-            r_acc = 1'b0;
-            rdata = 32'hcdcdcdcd; 
-            if(lower_addr == 2'b00)
-            begin
-                case(upper_addr)
-                19'b001_0000_0000_0001_0000: begin
-                    if(eff_addr < GLOBAL_SIZE)
-                    begin
-                        rdata = global_data[eff_addr];
-                        r_acc = 1'b1;
-                    end
+            case(upper_addr)
+            19'b001_0000_0000_0001_0000: begin
+                if(eff_addr < GLOBAL_SIZE)
+                begin
+                    rdata = global_data[eff_addr];
+                    r_acc = 1'b1;
                 end
-                19'b111_1111_1111_1111_1111: begin
-                    if(eff_addr < STACK_SIZE)
-                    begin
-                        rdata = stack_data[eff_addr];
-                        r_acc = 1'b1;
-                    end
-                end
-                19'b100_0000_0000_0000_0000: begin
-                    r_acc = peri_racc;
-                    if(peri_racc)
-                    begin
-                        rdata = peri_rdata;
-                    end
-                end
-                default: begin
-                    r_acc = 1'b0;
-                    rdata = 32'hcccccccc;
-                end
-                endcase
             end
+            19'b111_1111_1111_1111_1111: begin
+                if(eff_addr < STACK_SIZE)
+                begin
+                    rdata = stack_data[eff_addr];
+                    r_acc = 1'b1;
+                end
+            end
+            19'b100_0000_0000_0000_0000: begin
+                r_acc = peri_racc;
+                if(peri_racc)
+                begin
+                    rdata = peri_rdata;
+                end
+            end
+            default: begin
+                r_acc = 1'b0;
+                rdata = 32'hcccccccc;
+            end
+            endcase
         end
     end
 

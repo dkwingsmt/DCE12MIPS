@@ -24,21 +24,19 @@ reg [2:0] TCON;
 assign irqout = TCON[2];
 
 always@(*) begin
-    if(rd) begin
-        r_accessible = 1'b1;
-        case(addr[30:0])
-            31'h40000000: rdata = TH;			
-            31'h40000004: rdata = TL;			
-            31'h40000008: rdata = {29'b0,TCON};				
-            31'h40000010: rdata = {24'b0,led};			
-            31'h40000014: rdata = {24'b0,switch};
-            31'h40000018: rdata = {20'b0,digi};
-            default: begin
-                rdata = 32'hcdcdcdcd;
-                r_accessible = 1'b0;
-            end
-        endcase
-    end
+    r_accessible = 1'b1;
+    case(addr[30:0])
+        31'h40000000: rdata = TH;			
+        31'h40000004: rdata = TL;			
+        31'h40000008: rdata = {29'b0,TCON};				
+        31'h40000010: rdata = {24'b0,led};			
+        31'h40000014: rdata = {24'b0,switch};
+        31'h40000018: rdata = {20'b0,digi};
+        default: begin
+            rdata = 32'hcdcdcdcd;
+            r_accessible = 1'b0;
+        end
+    endcase
 end
 
 always@(negedge reset or posedge clk) begin
