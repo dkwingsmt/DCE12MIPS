@@ -93,7 +93,7 @@ module DataMem (reset_n,clk,rd,wr,addr,wdata,rdata,accessable,
         else
         begin
             w_acc <= 1'b0;
-            if(lower_addr == 2'b00)
+            if(lower_addr == 2'b00 & wr)
             begin
                 case(upper_addr)
                 19'h10010: begin
