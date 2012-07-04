@@ -35,11 +35,12 @@ module DataMem (reset_n,clk,rd,wr,addr,wdata,rdata,accessable,
         .r_accessible(peri_racc),
         .w_accessible(peri_wacc));
 
-    parameter GLOBAL_SIZE = 16;
-    parameter STACK_SIZE = 1;
+    parameter GLOBAL_SIZE = 32;
+    parameter STACK_SIZE = 4;
     reg [31:0] global_data [GLOBAL_SIZE-1:0];
-    reg [31:0] stack_data [12'hfff:12'hfff+1-STACK_SIZE];
-
+    reg [31:0] stack_data [12'h3ff:12'h3ff+1-STACK_SIZE];
+    wire [31:0] temp_stack;
+    assign temp_stack = stack_data['h3ff];
     wire [30:12] upper_addr;
     wire [11:2]  eff_addr;
     wire [1:0]   lower_addr;
@@ -64,7 +65,7 @@ module DataMem (reset_n,clk,rd,wr,addr,wdata,rdata,accessable,
                 end
             end
             19'b111_1111_1111_1111_1111: begin
-                if(eff_addr < STACK_SIZE)
+                if(eff_addr >12'h3ff-STACK_SIZE)
                 begin
                     rdata = stack_data[eff_addr];
                     r_acc = 1'b1;
@@ -104,7 +105,7 @@ module DataMem (reset_n,clk,rd,wr,addr,wdata,rdata,accessable,
                     end
                 end
                 19'h7ffff: begin
-                    if(eff_addr < STACK_SIZE)
+                    if(eff_addr >12'h3ff-STACK_SIZE)
                     begin
                         stack_data[eff_addr] <= wdata;
                         w_acc <= 1'b1;
