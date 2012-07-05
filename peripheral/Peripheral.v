@@ -44,7 +44,6 @@ always@(negedge reset or posedge clk) begin
 		TH <= 32'b0;
 		TL <= 32'hffffffff;
 		TCON <= 3'b0;	
-		rdata <= 32'b0;
         led <= 8'b0;
         digi <= 12'b0;
 	end
