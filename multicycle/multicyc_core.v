@@ -207,6 +207,7 @@ module multicyc_core(iClk,
     output      [31:0]  _oPCNext;
 
     reg     [31:0]  PC;
+    wire    [31:0]  NextInstAddr;
 
     wire    [31:0]  IF_PCAddFour;/*S*/
 
@@ -215,10 +216,12 @@ module multicyc_core(iClk,
 
     wire    [4:0]   ID_InstRs;/*S*/
     wire    [4:0]   ID_InstRt;/*S*/
+    wire    [26:0]  ID_InstJumpAddr;/*S*/
     wire    [4:0]   ID_RdRegId0;/*S*/
     wire    [31:0]  ID_RdRegData0;/*S*/
     wire    [4:0]   ID_RdRegId1;/*S*/
     wire    [31:0]  ID_RdRegData1;/*S*/
+    wire    [31:0]  ID_PCJumpTgt;/*S*/
 
     wire            ID_CtrlRegDst;/*S*/
     wire            ID_CtrlJump;/*S*/
@@ -248,8 +251,7 @@ module multicyc_core(iClk,
     wire            EX_Link;/*S*/
     wire    [31:0]  EX_PCBranchOffset;/*S*/
     wire    [31:0]  EX_PCBranchTgt;/*S*/
-    wire    [31:0]  EX_PCJumpTgt;/*S*/
-    wire            EX_DoBranch;/*S*/
+    wire            EX_TakeBranch;/*S*/
     wire    [31:0]  EX_PCNext;/*S*/
 
     wire    [31:0]  EX_AluIn0;/*S*/
@@ -269,6 +271,8 @@ module multicyc_core(iClk,
     wire            EX_CtrlJump;/*S*/
     wire            EX_CtrlJLink;/*S*/
 
+    wire            EX_CtrlMemRead;/*S*/ // From MEM
+
     wire    [1:0]   EX_AluOp;/*S*/
     wire    [5:0]   EX_InstOp;/*S*/
     wire    [5:0]   EX_AluFunct;/*S*/
@@ -283,7 +287,6 @@ module multicyc_core(iClk,
     wire    [4:0]   EX_InstRd;/*S*/
     wire    [15:0]  EX_InstImmediate;/*S*/
     wire    [4:0]   EX_InstShamt;/*S*/
-    wire    [26:0]  EX_InstJumpAddr;/*S*/
 
     // AluSrc: 00 as non-forward, 10 from EXMEM, 01 from MEMWB
     wire    [1:0]   EX_FWD_AluSrc0;/*S*/
@@ -333,6 +336,15 @@ module multicyc_core(iClk,
     wire    [31:0]  WB_RdData;/*S*/
     wire    [31:0]  WB_AluOut;/*S*/
 
+    reg             IFIDReg_Stall;
+    reg             IFIDReg_Flush;
+    reg             IDEXReg_Stall;
+    reg             IDEXReg_Flush;
+    reg             EXMEMReg_Stall;
+    reg             EXMEMReg_Flush;
+    reg             MEMWBReg_Stall;
+    reg             MEMWBReg_Flush;
+
     RegFile reg_inst(
         .clk    (iClk),
         .reset  (iRst_n),
@@ -369,7 +381,7 @@ module multicyc_core(iClk,
         .oShamt     (EX_CtrlALUShamt));
 
     ADD add32b_inst_PC_add_four(
-        .A(PC),
+        .A(NextInstAddr),
         .B(32'd4),
         .S(IF_PCAddFour));
 
@@ -388,12 +400,16 @@ module multicyc_core(iClk,
         .oV     (EX_ALUOverflow),
         .oN     (EX_ALUNegative));
 
-    assign oRdInstAddr = PC;
+    assign NextInstAddr = ID_CtrlJump ? ID_PCJumpTgt :
+                          PC;
+    assign oRdInstAddr = NextInstAddr;
 
     assign ID_RdRegId0 = ID_InstRs;
     assign ID_RdRegId1 = ID_InstRt;
     assign ID_InstRs = IFID_Inst[25:21];
     assign ID_InstRt = IFID_Inst[20:16];
+    assign ID_InstJumpAddr = IFID_Inst[25:0];
+    assign ID_PCJumpTgt = {IFID_PCAddFour[31:28], ID_InstJumpAddr, 2'b00};
 
     assign EX_CtrlRegDst    = IDEX_CtrlEx[9];
     assign EX_CtrlRegWrite  = IDEX_CtrlEx[8];
@@ -412,7 +428,6 @@ module multicyc_core(iClk,
     assign EX_InstShamt = IDEX_Inst[10:6];
     assign EX_AluFunct = IDEX_Inst[5:0];
     assign EX_InstImmediate = IDEX_Inst[15:0];
-    assign EX_InstJumpAddr = IDEX_Inst[25:0];
 
     assign EX_AluOp = EX_CtrlALUOp;
     assign EX_AluIn0 = EX_CtrlALUShamt ? {{27{1'b0}}, EX_InstShamt}
@@ -430,12 +445,9 @@ module multicyc_core(iClk,
     assign EX_Link = EX_CtrlJLink | EX_CtrlJRLink;
     assign EX_PCBranchOffset = {{14{EX_InstImmediate[15]}}, 
                                 EX_InstImmediate, 2'b00};
-    assign EX_PCJumpTgt = {IDEX_PCAddFour[31:28], EX_InstJumpAddr, 2'b00};
-    assign EX_DoBranch = EX_CtrlBranch & ~(EX_CtrlBranchEq ^ EX_AluZero);
-    assign EX_PCNext = EX_DoBranch ? EX_PCBranchTgt :
-                       EX_CtrlJump ? EX_PCJumpTgt :
-                       EX_CtrlJR ? EX_RealRdRegData0 : 
-                                   IDEX_PCAddFour;
+    assign EX_TakeBranch = EX_CtrlBranch & ~(EX_CtrlBranchEq ^ EX_AluZero);
+    //assign EX_PCNext = EX_TakeBranch ? EX_PCBranchTgt :
+                                   //IDEX_PCAddFour;
 
     assign EX_FWD_AluSrc0 = (EXMEM_RegWrite 
                              & (EXMEM_WrRegId != 5'b0)
@@ -470,6 +482,8 @@ module multicyc_core(iClk,
     assign MEM_CtrlMemtoReg = EXMEM_CtrlMem[2];
     assign MEM_CtrlMemWrite = EXMEM_CtrlMem[1];
     assign MEM_CtrlMemRead = EXMEM_CtrlMem[0];
+    assign EX_CtrlMemRead   = EXMEM_CtrlMem[0];
+
     assign MEM_RdWrMemAddr = EXMEM_AluOut;
     assign MEM_MemWrData = EXMEM_RealRdRegData1;
     assign oRdWrMemAddr = MEM_RdWrMemAddr;
@@ -482,6 +496,27 @@ module multicyc_core(iClk,
     assign WB_WrRegData = MEMWB_WrRegDataProposalMem;
     //assign WB_CtrlMemtoReg = MEMWB_CtrlWb;
     //assign WB_RdData = MEMWB_MemReadData;
+    
+    always @(*)
+    begin
+        IFIDReg_Stall = 0;
+        IFIDReg_Flush = 0;
+        IDEXReg_Stall = 0;
+        IDEXReg_Flush = 0;
+        EXMEMReg_Stall = 0;
+        EXMEMReg_Flush = 0;
+        MEMWBReg_Stall = 0;
+        MEMWBReg_Flush = 0;
+        if(EX_CtrlMemRead
+            & (EX_InstRt != 5'b0)
+            & ((EX_InstRt == ID_InstRs) 
+               | (EX_InstRt == ID_InstRt)))
+        begin
+            IFIDReg_Stall = 1;
+            IDEXReg_Flush = 1;
+        end
+
+    end
 
     always @(posedge iClk or negedge iRst_n)
     begin
@@ -500,6 +535,7 @@ module multicyc_core(iClk,
             //IDEX_CtrlWb <= 0;
 
             //EXMEM_Inst <= 0;
+            EXMEM_RealRdRegData1 <= 0;
             EXMEM_WrRegDataProposalEx <= 0;
             EXMEM_AluOut <= 0;
             EXMEM_RealRdRegData1 <= 0;
@@ -524,58 +560,111 @@ module multicyc_core(iClk,
         end
         else
         begin
-            IFID_PCAddFour <= IF_PCAddFour;
-            IFID_Inst <= iRdInst;
-
-            IDEX_Inst <= IFID_Inst;
-            IDEX_RdRegData0 <= ID_RdRegData0;
-            IDEX_RdRegData1 <= ID_RdRegData1;
-            IDEX_PCAddFour <= IFID_PCAddFour;
-            IDEX_CtrlEx <= {
-                            ID_CtrlRegDst,
-                            ID_CtrlRegWrite,
-                            ID_CtrlALUSrc,
-                            ID_CtrlALUOp,
-                            ID_CtrlMemtoReg,
-                            ID_CtrlBranch,
-                            ID_CtrlBranchEq,
-                            ID_CtrlJump,
-                            ID_CtrlJLink
-                            };
-            IDEX_CtrlMem <= {
-                            ID_CtrlMemtoReg,
-                            ID_CtrlMemWrite,
-                            ID_CtrlMemRead
-                            };
-            //IDEX_CtrlWb <= WB_CtrlMemtoReg;
-
-            //EXMEM_Inst <= IDEX_Inst;
-            EXMEM_WrRegDataProposalEx <= EX_WrRegDataProposalEx;
-            EXMEM_AluOut <= EX_AluOut;
-            EXMEM_RealRdRegData1 <= EX_RealRdRegData1;
-            //EXMEM_CtrlWb <= IDEX_CtrlWb;
-            EXMEM_CtrlMem <= IDEX_CtrlMem;
-            EXMEM_WrRegId <= EX_WrRegId;
-            EXMEM_RegWrite <= EX_RegWrite;
-            EXMEM_Link <= EX_Link;
-            EXMEM_PCAddFour <= IDEX_PCAddFour;
-            EXMEM_PCNext <= EX_PCNext;
-
-            //MEMWB_Inst <= EXMEM_Inst;
-            MEMWB_WrRegDataProposalMem <= MEM_WrRegDataProposalMem;
-            MEMWB_MemReadData <= iRdData;
-            //MEMWB_CtrlWb <= EXMEM_CtrlWb;
-            MEMWB_WrRegId <= EXMEM_WrRegId;
-            MEMWB_RegWrite <= EXMEM_RegWrite;
-            MEMWB_Link <= EXMEM_Link;
-            MEMWB_PCAddFour <= EXMEM_PCAddFour;
-            MEMWB_AluOut <= EXMEM_AluOut;
-            MEMWB_PCNext <= EXMEM_PCNext;
-
-            if(_iPCLoad)
-                PC <= _iPCLoadData;
-            else
+            if(IFIDReg_Flush)
+            begin
+                PC <= PC;
+                IFID_PCAddFour <= 0;
+                IFID_Inst <= 0;
+            end
+            else if(~IFIDReg_Stall)
+            begin
                 PC <= IF_PCAddFour;
+                IFID_PCAddFour <= IF_PCAddFour;
+                IFID_Inst <= iRdInst;
+            end
+
+            if(IDEXReg_Flush)
+            begin
+                IDEX_Inst <= 0;
+                IDEX_RdRegData0 <= 0;
+                IDEX_RdRegData1 <= 0;
+                IDEX_PCAddFour <= 0;
+                IDEX_CtrlEx <= 0;
+                IDEX_CtrlMem <= 0;
+                //IDEX_CtrlWb <= 0;
+            end
+            else if(~IDEXReg_Stall)
+            begin
+                IDEX_Inst <= IFID_Inst;
+                IDEX_RdRegData0 <= ID_RdRegData0;
+                IDEX_RdRegData1 <= ID_RdRegData1;
+                IDEX_PCAddFour <= IFID_PCAddFour;
+                IDEX_CtrlEx <= {
+                                ID_CtrlRegDst,
+                                ID_CtrlRegWrite,
+                                ID_CtrlALUSrc,
+                                ID_CtrlALUOp,
+                                ID_CtrlMemtoReg,
+                                ID_CtrlBranch,
+                                ID_CtrlBranchEq,
+                                ID_CtrlJump,
+                                ID_CtrlJLink
+                                };
+                IDEX_CtrlMem <= {
+                                ID_CtrlMemtoReg,
+                                ID_CtrlMemWrite,
+                                ID_CtrlMemRead
+                                };
+                //IDEX_CtrlWb <= WB_CtrlMemtoReg;
+            end
+
+            if(EXMEMReg_Flush)
+            begin
+                //EXMEM_Inst <= 0;
+                EXMEM_RealRdRegData1 <= 0;
+                EXMEM_WrRegDataProposalEx <= 0;
+                EXMEM_AluOut <= 0;
+                EXMEM_RealRdRegData1 <= 0;
+                //EXMEM_CtrlWb <= 0;
+                EXMEM_CtrlMem <= 0;
+                EXMEM_WrRegId <= 0;
+                EXMEM_RegWrite <= 0;
+                EXMEM_Link <= 0;
+                EXMEM_PCAddFour <= 0;
+                EXMEM_PCNext <= 0;
+            end
+            else if(~EXMEMReg_Stall)
+            begin
+                //EXMEM_Inst <= IDEX_Inst;
+                EXMEM_WrRegDataProposalEx <= EX_WrRegDataProposalEx;
+                EXMEM_AluOut <= EX_AluOut;
+                EXMEM_RealRdRegData1 <= EX_RealRdRegData1;
+                //EXMEM_CtrlWb <= IDEX_CtrlWb;
+                EXMEM_CtrlMem <= IDEX_CtrlMem;
+                EXMEM_WrRegId <= EX_WrRegId;
+                EXMEM_RegWrite <= EX_RegWrite;
+                EXMEM_Link <= EX_Link;
+                EXMEM_PCAddFour <= IDEX_PCAddFour;
+                EXMEM_PCNext <= EX_PCNext;
+            end
+
+            if(MEMWBReg_Flush)
+            begin
+                //MEMWB_Inst <= 0;
+                MEMWB_WrRegDataProposalMem <= 0;
+                MEMWB_MemReadData <= 0;
+                //MEMWB_CtrlWb <= 0;
+                MEMWB_WrRegId <= 0;
+                MEMWB_RegWrite <= 0;
+                MEMWB_Link <= 0;
+                MEMWB_PCAddFour <= 0;
+                MEMWB_AluOut <= 0;
+                MEMWB_PCNext <= 0;
+            end
+            else if(~MEMWBReg_Stall)
+            begin
+                //MEMWB_Inst <= EXMEM_Inst;
+                MEMWB_WrRegDataProposalMem <= MEM_WrRegDataProposalMem;
+                MEMWB_MemReadData <= iRdData;
+                //MEMWB_CtrlWb <= EXMEM_CtrlWb;
+                MEMWB_WrRegId <= EXMEM_WrRegId;
+                MEMWB_RegWrite <= EXMEM_RegWrite;
+                MEMWB_Link <= EXMEM_Link;
+                MEMWB_PCAddFour <= EXMEM_PCAddFour;
+                MEMWB_AluOut <= EXMEM_AluOut;
+                MEMWB_PCNext <= EXMEM_PCNext;
+            end
+
 
         end
     end
