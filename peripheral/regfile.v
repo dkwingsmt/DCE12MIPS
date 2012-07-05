@@ -11,10 +11,10 @@ reg [31:0] RF_DATA[31:1];
 integer i;
 
 assign data1=(addr1==5'b0)?32'b0:	//$0 MUST be all zeros
-             (addr1==addr3)?data3:
+             ((addr1==addr3)&wr)?data3:
              RF_DATA[addr1];
 assign data2=(addr2==5'b0)?32'b0:	//$0 MUST be all zeros
-             (addr2==addr3)?data3:
+             ((addr2==addr3)&wr)?data3:
              RF_DATA[addr2];
 
 always@(negedge reset or posedge clk) begin
