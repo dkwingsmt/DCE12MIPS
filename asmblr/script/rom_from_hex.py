@@ -22,7 +22,7 @@ def main():
         if not result:
             print "Error parsing line %d\"%s\": Invalid." % (linenum, line)
             continue
-        target_line = "14'h%04x:    data <= 32'h%s;\n" % (now_addr, line)
+        target_line = "14'h%04x:    data = 32'h%s;\n" % (now_addr, line)
         output_file.write(target_line)
 
         now_addr = now_addr + 1

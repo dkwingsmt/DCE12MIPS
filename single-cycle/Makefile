@@ -39,7 +39,9 @@ VERILOG_SRCFILE = testbench.v singcyc.v singcyc_core.v \
 VERILOG_DEPEND = tb1.v \
 				 $(PERIDIR)DataMemInit.v \
 				 $(PERIDIR)InstRom.v \
-				  $(ALUDIR)isa_define.v 
+				 $(ALUDIR)isa_define.v \
+				 $(PERIDIR)_SelectTest.v \
+				 ../asmblr/script/gcd_text.v
 COMPILE_DST = v.out
 SIMULATE_OUTPUT = v.lxt
 SIMULATE_POSTFIX = .lxt
