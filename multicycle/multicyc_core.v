@@ -214,8 +214,10 @@ module multicyc_core(iClk,
     reg     [31:0]  IFID_PCAddFour;/*S*/
     reg     [31:0]  IFID_Inst;/*S*/
 
+    wire    [5:0]   ID_InstOp;/*S*/
     wire    [4:0]   ID_InstRs;/*S*/
     wire    [4:0]   ID_InstRt;/*S*/
+    wire    [5:0]   ID_InstFunct;/*S*/
     wire    [26:0]  ID_InstJumpAddr;/*S*/
     wire    [4:0]   ID_RdRegId0;/*S*/
     wire    [31:0]  ID_RdRegData0;/*S*/
@@ -235,12 +237,24 @@ module multicyc_core(iClk,
     wire            ID_CtrlALUSrc;/*S*/
     wire    [1:0]   ID_CtrlALUOp;/*S*/
 
+    wire            ID_AluSign;/*S*/
+    wire    [5:0]   ID_AluCtrl;/*S*/
+    wire            ID_CtrlJR;/*S*/
+    wire            ID_CtrlJRLink;/*S*/
+    wire            ID_CtrlALUShamt;/*S*/
+
     reg     [31:0]  IDEX_Inst;/*S*/
     //reg     [9:0]   IDEX_CtrlWb;/*S*/
-    reg     [2:0]  IDEX_CtrlMem;/*S*/
-    reg     [9:0]  IDEX_CtrlEx;/*S*/
+    reg     [2:0]   IDEX_CtrlMem;/*S*/
+    reg     [9:0]   IDEX_CtrlEx;/*S*/
     reg     [31:0]  IDEX_RdRegData0;/*S*/
     reg     [31:0]  IDEX_RdRegData1;/*S*/
+    reg             IDEX_AluSign;/*S*/
+    reg     [5:0]   IDEX_AluCtrl;/*S*/
+    //reg             IDEX_CtrlJump;/*S*/
+    reg             IDEX_CtrlJR;/*S*/
+    reg             IDEX_CtrlJRLink;/*S*/
+    reg             IDEX_CtrlALUShamt;/*S*/
 
     reg     [31:0]  IDEX_PCAddFour;/*S*/
 
@@ -253,6 +267,8 @@ module multicyc_core(iClk,
     wire    [31:0]  EX_PCBranchTgt;/*S*/
     wire            EX_TakeBranch;/*S*/
     wire    [31:0]  EX_PCNext;/*S*/
+    wire            EX_FalseBranch;
+    wire    [31:0]  EX_AlterBranchAddr;
 
     wire    [31:0]  EX_AluIn0;/*S*/
     wire    [31:0]  EX_AluIn1;/*S*/
@@ -274,14 +290,9 @@ module multicyc_core(iClk,
     wire            EX_CtrlMemRead;/*S*/ // From MEM
 
     wire    [1:0]   EX_AluOp;/*S*/
-    wire    [5:0]   EX_InstOp;/*S*/
     wire    [5:0]   EX_AluFunct;/*S*/
-    wire    [5:0]   EX_AluCtrl;/*S*/
-    wire            EX_AluSign;/*S*/
-    wire            EX_CtrlJR;/*S*/
-    wire            EX_CtrlJRLink;/*S*/
-    wire            EX_CtrlALUShamt;/*S*/
 
+    wire    [5:0]   EX_InstOp;/*S*/
     wire    [4:0]   EX_InstRs;/*S*/
     wire    [4:0]   EX_InstRt;/*S*/
     wire    [4:0]   EX_InstRd;/*S*/
@@ -304,6 +315,8 @@ module multicyc_core(iClk,
     reg     [4:0]   EXMEM_WrRegId;/*S*/
     reg             EXMEM_RegWrite;/*S*/
     reg             EXMEM_Link;/*S*/
+    reg             EXMEM_FalseBranch;
+    reg     [31:0]  EXMEM_AlterBranchAddr;
     reg     [31:0]  EXMEM_PCAddFour;/*S*/
 
     reg     [31:0]  EXMEM_PCNext;/*S*/
@@ -371,14 +384,14 @@ module multicyc_core(iClk,
         .oALUOp     (ID_CtrlALUOp));
 
     multicyc_alu_ctrl alu_ctrl_inst(
-        .iAluOp     (EX_AluOp),
-        .iInstOp    (EX_InstOp),
-        .iFunct     (EX_AluFunct),
-        .oAluCtrl   (EX_AluCtrl),
-        .oSign      (EX_AluSign),
-        .oJR        (EX_CtrlJR),
-        .oJRLink    (EX_CtrlJRLink),
-        .oShamt     (EX_CtrlALUShamt));
+        .iAluOp     (ID_CtrlALUOp),
+        .iInstOp    (ID_InstOp),
+        .iFunct     (ID_InstFunct),
+        .oAluCtrl   (ID_AluCtrl),
+        .oSign      (ID_AluSign),
+        .oJR        (ID_CtrlJR),
+        .oJRLink    (ID_CtrlJRLink),
+        .oShamt     (ID_CtrlALUShamt));
 
     ADD add32b_inst_PC_add_four(
         .A(NextInstAddr),
@@ -393,21 +406,25 @@ module multicyc_core(iClk,
     ALU alu_inst(
         .iA     (EX_AluIn0),
         .iB     (EX_AluIn1),
-        .iALUFun(EX_AluCtrl),
-        .iSign  (EX_AluSign),
+        .iALUFun(IDEX_AluCtrl),
+        .iSign  (IDEX_AluSign),
         .oS     (EX_AluOut),
         .oZ     (EX_AluZero),
         .oV     (EX_ALUOverflow),
         .oN     (EX_ALUNegative));
 
-    assign NextInstAddr = ID_CtrlJump ? ID_PCJumpTgt :
+    assign NextInstAddr = EXMEM_FalseBranch ? EXMEM_AlterBranchAddr :
+                          ID_CtrlJump ? ID_PCJumpTgt :
+                          IDEX_CtrlJR ? EX_RealRdRegData0 :     // Stalled 1 cyc
                           PC;
     assign oRdInstAddr = NextInstAddr;
 
     assign ID_RdRegId0 = ID_InstRs;
     assign ID_RdRegId1 = ID_InstRt;
+    assign ID_InstOp = IFID_Inst[31:26];
     assign ID_InstRs = IFID_Inst[25:21];
     assign ID_InstRt = IFID_Inst[20:16];
+    assign ID_InstFunct = IDEX_Inst[5:0];
     assign ID_InstJumpAddr = IFID_Inst[25:0];
     assign ID_PCJumpTgt = {IFID_PCAddFour[31:28], ID_InstJumpAddr, 2'b00};
 
@@ -430,8 +447,8 @@ module multicyc_core(iClk,
     assign EX_InstImmediate = IDEX_Inst[15:0];
 
     assign EX_AluOp = EX_CtrlALUOp;
-    assign EX_AluIn0 = EX_CtrlALUShamt ? {{27{1'b0}}, EX_InstShamt}
-                                       : EX_RealRdRegData0;
+    assign EX_AluIn0 = IDEX_CtrlALUShamt ? {{27{1'b0}}, EX_InstShamt}
+                                         : EX_RealRdRegData0;
     assign EX_AluIn1 = EX_CtrlALUSrc ? EX_IStyleAluSrc1
                                      : EX_RealRdRegData1;
 
@@ -442,12 +459,14 @@ module multicyc_core(iClk,
                      EX_CtrlRegDst ? EX_InstRd : 
                      EX_InstRt;
     assign EX_RegWrite = EX_CtrlRegWrite | EX_Link;
-    assign EX_Link = EX_CtrlJLink | EX_CtrlJRLink;
+    assign EX_Link = EX_CtrlJLink | IDEX_CtrlJRLink;
     assign EX_PCBranchOffset = {{14{EX_InstImmediate[15]}}, 
                                 EX_InstImmediate, 2'b00};
     assign EX_TakeBranch = EX_CtrlBranch & ~(EX_CtrlBranchEq ^ EX_AluZero);
     //assign EX_PCNext = EX_TakeBranch ? EX_PCBranchTgt :
                                    //IDEX_PCAddFour;
+    assign EX_FalseBranch = EX_TakeBranch;      // Plz always make sure & CtrlBranch
+    assign EX_AlterBranchAddr = EX_PCBranchTgt;
 
     assign EX_FWD_AluSrc0 = (EXMEM_RegWrite 
                              & (EXMEM_WrRegId != 5'b0)
@@ -507,7 +526,20 @@ module multicyc_core(iClk,
         EXMEMReg_Flush = 0;
         MEMWBReg_Stall = 0;
         MEMWBReg_Flush = 0;
-        if(EX_CtrlMemRead
+        // Branch took false branch
+        if(EX_FalseBranch)
+        begin
+            IFIDReg_Flush = 1;
+            IDEXReg_Flush = 1;
+            EXMEMReg_Flush = 1;
+        end
+        // JR, stall 1 cyc
+        else if(ID_CtrlJR)
+        begin
+            IFIDReg_Flush = 1;
+        end
+        // Load-Use, stall 1 cyc
+        else if(EX_CtrlMemRead
             & (EX_InstRt != 5'b0)
             & ((EX_InstRt == ID_InstRs) 
                | (EX_InstRt == ID_InstRt)))
@@ -522,7 +554,7 @@ module multicyc_core(iClk,
     begin
         if(~iRst_n)
         begin
-            PC <= 32'h004000a8;
+            PC <= 32'h00400000;
             IFID_PCAddFour <= 0;
             IFID_Inst <= 0;
 
@@ -533,6 +565,11 @@ module multicyc_core(iClk,
             IDEX_CtrlEx <= 0;
             IDEX_CtrlMem <= 0;
             //IDEX_CtrlWb <= 0;
+            IDEX_AluSign <= 0;
+            IDEX_AluCtrl <= 0;
+            IDEX_CtrlJR <= 0;
+            IDEX_CtrlJRLink <= 0;
+            IDEX_CtrlALUShamt <= 0;
 
             //EXMEM_Inst <= 0;
             EXMEM_RealRdRegData1 <= 0;
@@ -544,6 +581,8 @@ module multicyc_core(iClk,
             EXMEM_WrRegId <= 0;
             EXMEM_RegWrite <= 0;
             EXMEM_Link <= 0;
+            EXMEM_FalseBranch <= 0;
+            EXMEM_AlterBranchAddr <= 0;
             EXMEM_PCAddFour <= 0;
             EXMEM_PCNext <= 0;
 
@@ -560,15 +599,14 @@ module multicyc_core(iClk,
         end
         else
         begin
+            PC <= IF_PCAddFour;
             if(IFIDReg_Flush)
             begin
-                PC <= PC;
                 IFID_PCAddFour <= 0;
                 IFID_Inst <= 0;
             end
             else if(~IFIDReg_Stall)
             begin
-                PC <= IF_PCAddFour;
                 IFID_PCAddFour <= IF_PCAddFour;
                 IFID_Inst <= iRdInst;
             end
@@ -582,6 +620,11 @@ module multicyc_core(iClk,
                 IDEX_CtrlEx <= 0;
                 IDEX_CtrlMem <= 0;
                 //IDEX_CtrlWb <= 0;
+                IDEX_AluSign <= 0;
+                IDEX_AluCtrl <= 0;
+                IDEX_CtrlJR <= 0;
+                IDEX_CtrlJRLink <= 0;
+                IDEX_CtrlALUShamt <= 0;
             end
             else if(~IDEXReg_Stall)
             begin
@@ -606,6 +649,11 @@ module multicyc_core(iClk,
                                 ID_CtrlMemRead
                                 };
                 //IDEX_CtrlWb <= WB_CtrlMemtoReg;
+                IDEX_AluSign <= ID_AluSign;
+                IDEX_AluCtrl <= ID_AluCtrl;
+                IDEX_CtrlJR <= ID_CtrlJR;
+                IDEX_CtrlJRLink <= ID_CtrlJRLink;
+                IDEX_CtrlALUShamt <= ID_CtrlALUShamt;
             end
 
             if(EXMEMReg_Flush)
@@ -620,6 +668,8 @@ module multicyc_core(iClk,
                 EXMEM_WrRegId <= 0;
                 EXMEM_RegWrite <= 0;
                 EXMEM_Link <= 0;
+                EXMEM_FalseBranch <= 0;
+                EXMEM_AlterBranchAddr <= 0;
                 EXMEM_PCAddFour <= 0;
                 EXMEM_PCNext <= 0;
             end
@@ -634,6 +684,8 @@ module multicyc_core(iClk,
                 EXMEM_WrRegId <= EX_WrRegId;
                 EXMEM_RegWrite <= EX_RegWrite;
                 EXMEM_Link <= EX_Link;
+                EXMEM_FalseBranch <= EX_FalseBranch;
+                EXMEM_AlterBranchAddr <= EX_AlterBranchAddr;
                 EXMEM_PCAddFour <= IDEX_PCAddFour;
                 EXMEM_PCNext <= EX_PCNext;
             end
