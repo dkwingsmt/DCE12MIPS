@@ -75,3 +75,6 @@
 14'h000d:    data = 32'had090000;
 14'h000e:    data = 32'h08100000;
 `endif
+`ifdef __TEST3__
+`include "../asmblr/script/test3_text.v"
+`endif

@@ -39,6 +39,7 @@ VERILOG_SRCFILE = testbench.v multicyc.v multicyc_core.v \
 				  $(ALUDIR)SUB.v
 VERILOG_DEPEND = tb1.v \
 				 $(PERIDIR)DataMemInit.v \
+				 $(PERIDIR)_SelectTest.v \
 				 $(PERIDIR)InstRom.v \
 				 $(ALUDIR)isa_define.v 
 COMPILE_DST = v.out

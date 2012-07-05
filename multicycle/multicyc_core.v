@@ -171,7 +171,7 @@ module multicyc_ctrl_unit(  iOpCode,
             oJump = 1'b1;      oJLink = 1'b0;
         end
         `OPCODE_JAL: begin
-            oJump = 1'b1;      oJLink = 1'b1;
+            oJump = 1'b1;      oJLink = 1'b1;       oMemtoReg = 1'b0;
         end
         endcase
     end
@@ -536,7 +536,7 @@ module multicyc_core(iClk,
         // J or JR, stall 1 cyc
         else if(ID_CtrlJR | ID_CtrlJump)
         begin
-            IDEXReg_Flush = 1;
+            IFIDReg_Flush = 1;
         end
         // Load-Use, stall 1 cyc
         else if(EX_CtrlMemRead

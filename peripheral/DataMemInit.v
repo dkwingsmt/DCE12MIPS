@@ -78,3 +78,6 @@ global_data[12] <= 32'h00000012;
 global_data[13] <= 32'h00000063;
 global_data[14] <= 32'h0000002f;
 `endif
+`ifdef __TEST3__
+`include "../asmblr/script/test3_global.v"
+`endif
