@@ -187,6 +187,7 @@ module multicyc_core(iClk,
                      oMemRead, 
                      oWrData, 
                      iRdData,
+                     iInterrupt,
                      _iPCLoad,
                      _iPCLoadData,
                      _oPC,
@@ -201,16 +202,21 @@ module multicyc_core(iClk,
     output              oMemRead;
     output      [31:0]  oWrData;
     input       [31:0]  iRdData;
+    input               iInterrupt;
     input               _iPCLoad;
     input       [31:0]  _iPCLoadData;
     output      [31:0]  _oPC;
     output      [31:0]  _oPCNext;
 
     reg     [31:0]  PC;
+    wire    [31:0]  PC_Raw;
+    wire            BeginInterrupt;
+    reg             InstFromInterrupt;
     wire    [31:0]  NextInstAddr;
 
     wire    [31:0]  IF_PCAddFour;/*S*/
-
+    
+    reg     [31:0]  IFID_PC;
     reg     [31:0]  IFID_PCAddFour;/*S*/
     reg     [31:0]  IFID_Inst;/*S*/
 
@@ -243,6 +249,7 @@ module multicyc_core(iClk,
     wire            ID_CtrlJRLink;/*S*/
     wire            ID_CtrlALUShamt;/*S*/
 
+    reg     [31:0]  IDEX_PC;
     reg     [31:0]  IDEX_Inst;/*S*/
     //reg     [9:0]   IDEX_CtrlWb;/*S*/
     reg     [2:0]   IDEX_CtrlMem;/*S*/
@@ -307,6 +314,8 @@ module multicyc_core(iClk,
     wire    [31:0]  EX_RealRdRegData0;/*S*/
     wire    [31:0]  EX_RealRdRegData1;/*S*/
 
+    reg     [31:0]  EXMEM_PC;
+    reg             EXMEM_Interrupt;
     reg     [31:0]  EXMEM_WrRegDataProposalEx;
     reg     [31:0]  EXMEM_Inst;/*S*/
     //reg             EXMEM_CtrlWb;/*S*/
@@ -329,6 +338,8 @@ module multicyc_core(iClk,
     wire            MEM_CtrlMemRead;/*S*/
     wire            MEM_CtrlMemtoReg;/*S*/
 
+    reg     [31:0]  MEMWB_PC;
+    reg             MEMWB_Interrupt;
     reg     [31:0]  MEMWB_WrRegDataProposalMem;
     reg     [31:0]  MEMWB_Inst;/*S*/
     //reg             MEMWB_CtrlWb;/*S*/
@@ -358,6 +369,7 @@ module multicyc_core(iClk,
     reg             EXMEMReg_Flush;
     reg             MEMWBReg_Stall;
     reg             MEMWBReg_Flush;
+    wire            Flush_All;
 
     RegFile reg_inst(
         .clk    (iClk),
@@ -414,11 +426,18 @@ module multicyc_core(iClk,
         .oV     (EX_ALUOverflow),
         .oN     (EX_ALUNegative));
 
-    assign NextInstAddr = EXMEM_FalseBranch ? EXMEM_AlterBranchAddr :
+    assign NextInstAddr = InstFromInterrupt ? 32'h80000004 :
+                          EXMEM_FalseBranch ? EXMEM_AlterBranchAddr :
                           IDEX_CtrlJump ? IDEX_PCJumpTgt :
                           IDEX_CtrlJR ? EX_RealRdRegData0 :     // Stalled 1 cyc
                           PC;
     assign oRdInstAddr = NextInstAddr;
+    assign PC_Raw = {(BeginInterrupt ? 1'b1 :
+                    IDEX_CtrlJR ? EX_RealRdRegData0[31] :
+                    PC[31]),IF_PCAddFour[30:0]};
+
+    assign BeginInterrupt = (~NextInstAddr[31])&(~IFID_PC[31])&(~IDEX_PC[31])&iInterrupt;
+    assign Flush_All = BeginInterrupt;
 
     assign ID_RdRegId0 = ID_InstRs;
     assign ID_RdRegId1 = ID_InstRt;
@@ -511,9 +530,9 @@ module multicyc_core(iClk,
     assign oMemWrite = MEM_CtrlMemWrite;
     assign oMemRead = MEM_CtrlMemRead;
 
-    assign WB_WrRegId = MEMWB_WrRegId;
-    assign WB_RegWrite = MEMWB_RegWrite;
-    assign WB_WrRegData = MEMWB_WrRegDataProposalMem;
+    assign WB_WrRegId = MEMWB_Interrupt ? `INTERRUPT_REG : MEMWB_WrRegId;
+    assign WB_RegWrite = MEMWB_RegWrite | MEMWB_Interrupt;
+    assign WB_WrRegData = MEMWB_Interrupt ? MEMWB_PC : MEMWB_WrRegDataProposalMem;
     //assign WB_CtrlMemtoReg = MEMWB_CtrlWb;
     //assign WB_RdData = MEMWB_MemReadData;
     
@@ -554,10 +573,15 @@ module multicyc_core(iClk,
     begin
         if(~iRst_n)
         begin
+            InstFromInterrupt <= 0;
             PC <= 32'h00400000;
+            IFID_PC <= 0;
+            IDEX_PC <= 0;
+            EXMEM_PC <=0;
+            MEMWB_PC <=0;
             IFID_PCAddFour <= 0;
             IFID_Inst <= 0;
-
+            
             IDEX_Inst <= 0;
             IDEX_RdRegData0 <= 0;
             IDEX_RdRegData1 <= 0;
@@ -601,19 +625,23 @@ module multicyc_core(iClk,
         end
         else
         begin
-            if(IFIDReg_Flush)
+            InstFromInterrupt <= BeginInterrupt;
+            if(IFIDReg_Flush | Flush_All)
             begin
+                if(Flush_All)
+                    PC <= PC_Raw;
                 IFID_PCAddFour <= 0;
                 IFID_Inst <= 0;
             end
             else if(~IFIDReg_Stall)
             begin
-                PC <= IF_PCAddFour;
+                PC <= PC_Raw;
+                IFID_PC <= NextInstAddr;
                 IFID_PCAddFour <= IF_PCAddFour;
                 IFID_Inst <= iRdInst;
             end
 
-            if(IDEXReg_Flush)
+            if(IDEXReg_Flush | Flush_All)
             begin
                 IDEX_Inst <= 0;
                 IDEX_RdRegData0 <= 0;
@@ -630,8 +658,9 @@ module multicyc_core(iClk,
                 IDEX_CtrlJRLink <= 0;
                 IDEX_CtrlALUShamt <= 0;
             end
-            else if(~IDEXReg_Stall)
+            else if(~IDEXReg_Stall) 
             begin
+                IDEX_PC <= IFID_PC;
                 IDEX_Inst <= IFID_Inst;
                 IDEX_RdRegData0 <= ID_RdRegData0;
                 IDEX_RdRegData1 <= ID_RdRegData1;
@@ -662,9 +691,12 @@ module multicyc_core(iClk,
                 IDEX_CtrlALUShamt <= ID_CtrlALUShamt;
             end
 
-            if(EXMEMReg_Flush)
+            if(EXMEMReg_Flush | Flush_All)
             begin
-                //EXMEM_Inst <= 0;
+                EXMEM_PC <= (~IDEXReg_Flush) ? IDEX_PC :
+                            (IFIDReg_Flush) ? NextInstAddr :
+                                            IFID_PC;
+                EXMEM_Interrupt <= Flush_All;
                 EXMEM_RealRdRegData1 <= 0;
                 EXMEM_WrRegDataProposalEx <= 0;
                 EXMEM_AluOut <= 0;
@@ -681,6 +713,8 @@ module multicyc_core(iClk,
             end
             else if(~EXMEMReg_Stall)
             begin
+                EXMEM_Interrupt <= 1'b0;
+                EXMEM_PC <= IDEX_PC;
                 //EXMEM_Inst <= IDEX_Inst;
                 EXMEM_WrRegDataProposalEx <= EX_WrRegDataProposalEx;
                 EXMEM_AluOut <= EX_AluOut;
@@ -698,6 +732,7 @@ module multicyc_core(iClk,
 
             if(MEMWBReg_Flush)
             begin
+                MEMWB_Interrupt <= 0;
                 //MEMWB_Inst <= 0;
                 MEMWB_WrRegDataProposalMem <= 0;
                 MEMWB_MemReadData <= 0;
@@ -711,6 +746,8 @@ module multicyc_core(iClk,
             end
             else if(~MEMWBReg_Stall)
             begin
+                MEMWB_Interrupt <= EXMEM_Interrupt;
+                MEMWB_PC <= EXMEM_PC;
                 //MEMWB_Inst <= EXMEM_Inst;
                 MEMWB_WrRegDataProposalMem <= MEM_WrRegDataProposalMem;
                 MEMWB_MemReadData <= iRdData;
