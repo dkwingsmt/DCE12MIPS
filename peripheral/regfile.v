@@ -20,7 +20,7 @@ assign data2=(addr2==5'b0)?32'b0:	//$0 MUST be all zeros
 always@(negedge reset or posedge clk) begin
 	if(~reset) begin
 		for(i=1;i<32;i=i+1) RF_DATA[i]<=32'b0;
-        RF_DATA[i] <= 32'h7ffffffc;
+        RF_DATA[29] <= 32'h7ffffffc;
 	end
 	else begin
 		if(wr && addr3) RF_DATA[addr3] <= data3;

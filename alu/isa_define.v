@@ -50,4 +50,5 @@
 `define ALUCTRL_LEZ     6'b111101
 `define ALUCTRL_GEZ     6'b111001
 `define ALUCTRL_GTZ     6'b111111
+`define INTERRUPT_REG   5'd26
 `endif

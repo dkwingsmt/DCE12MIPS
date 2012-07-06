@@ -11,25 +11,51 @@ module multicyc_fpga(iClk, iRst, iSwitch, oLED, oDigi, oRstOut, oClkOut, iLEDSel
     wire    [7:0]   LEDOrigin;
     wire    [31:0]   PC;
     
-    reg [3:0] ClkReg;
+    reg [3:0] ClkRegDec;
     always @(posedge iClk or posedge iRst)
     begin
         if(iRst)
         begin
-            ClkReg <= 4'b0;
+            ClkRegDec <= 4'b0;
         end
         else
         begin
-            if(ClkReg == 4'b0100)
-                ClkReg <= 4'b1000;
-            else if(ClkReg == 4'b1100)
-                ClkReg <= 4'b0000;
+            if(ClkRegDec == 4'b0100)
+                ClkRegDec <= 4'b1000;
+            else if(ClkRegDec == 4'b1100)
+                ClkRegDec <= 4'b0000;
             else
-                ClkReg <= ClkReg + 1;
+                ClkRegDec <= ClkRegDec + 1;
+        end
+    end
+    
+    reg [31:0] ClkReg20ms;
+    reg        ClkSig20ms;    
+    always @(posedge iClk or posedge iRst)
+    begin
+        if(iRst)
+        begin
+            ClkReg20ms <= 0;
+        end
+        else
+        begin
+            if(ClkReg20ms == 1_000_000)
+            begin
+                ClkSig20ms <= 1;
+                ClkReg20ms <= ClkReg20ms + 1;
+            end
+            else if(ClkReg20ms == 2_000_000)
+            begin
+                ClkReg20ms <= 0;
+                ClkSig20ms <= 0;
+            end
+            else
+                ClkReg20ms <= ClkReg20ms + 1;
         end
     end
 
-    multicyc multicyc_inst(.iClk(ClkReg[3]), 
+
+    multicyc multicyc_inst(.iClk(ClkRegDec[3]), 
                          .iRst_n(~iRst),
                          .iSwitch(iSwitch),
                          .oLED(LEDOrigin),
@@ -38,6 +64,6 @@ module multicyc_fpga(iClk, iRst, iSwitch, oLED, oDigi, oRstOut, oClkOut, iLEDSel
 								 
     assign oRstOut = iRst;
     assign oClkOut = iClk;
-    assign oLED = iLEDSelect ? PC[7:0]
+    assign oLED = ~iLEDSelect ? PC[9:2]
                              : LEDOrigin;
 endmodule
