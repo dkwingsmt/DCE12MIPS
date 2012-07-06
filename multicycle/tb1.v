@@ -15,6 +15,7 @@ module top();
         iRst_n = 0;
         @(negedge Clk)
         iRst_n = 1;
+        #20000 switch = 8'hc9;
     end
 
     always
@@ -31,7 +32,7 @@ module top();
         $dumpfile("v.lxt");
         $dumpvars(0, top);
 
-        #20000
+        #70000
 
         $dumpflush;
         $stop;

@@ -630,6 +630,7 @@ module multicyc_core(iClk,
             begin
                 if(Flush_All)
                     PC <= PC_Raw;
+                IFID_PC <= 0;
                 IFID_PCAddFour <= 0;
                 IFID_Inst <= 0;
             end
@@ -643,6 +644,7 @@ module multicyc_core(iClk,
 
             if(IDEXReg_Flush | Flush_All)
             begin
+                IFID_PC <= 0;
                 IDEX_Inst <= 0;
                 IDEX_RdRegData0 <= 0;
                 IDEX_RdRegData1 <= 0;
@@ -693,9 +695,15 @@ module multicyc_core(iClk,
 
             if(EXMEMReg_Flush | Flush_All)
             begin
-                EXMEM_PC <= (~IDEXReg_Flush) ? IDEX_PC :
-                            (IFIDReg_Flush) ? NextInstAddr :
-                                            IFID_PC;
+//                EXMEM_PC <= (~IDEXReg_Flush) ? IDEX_PC :
+//                            (IFIDReg_Flush) ? NextInstAddr :
+//                                            IFID_PC;
+                if (Flush_All)
+                    EXMEM_PC <= (IDEX_PC) ? IDEX_PC :
+                                (IFID_PC) ? IFID_PC :
+                                NextInstAddr;
+                else
+                    EXMEM_PC <= IDEX_PC;
                 EXMEM_Interrupt <= Flush_All;
                 EXMEM_RealRdRegData1 <= 0;
                 EXMEM_WrRegDataProposalEx <= 0;
