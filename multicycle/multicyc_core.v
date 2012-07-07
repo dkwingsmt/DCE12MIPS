@@ -644,7 +644,7 @@ module multicyc_core(iClk,
 
             if(IDEXReg_Flush | Flush_All)
             begin
-                IFID_PC <= 0;
+                IDEX_PC <= 0;
                 IDEX_Inst <= 0;
                 IDEX_RdRegData0 <= 0;
                 IDEX_RdRegData1 <= 0;
