@@ -21,12 +21,12 @@ module singcyc_fpga(iClk, iRst, iSwitch, oLED, oDigi, oRstOut, oClkOut, iLEDSele
         end
         else
         begin
-            if(ClkReg == 1_000_000)
+            if(ClkReg == 10)//_000_000)
             begin
                 ClkSig <= 1;
                 ClkReg <= ClkReg + 1;
             end
-            else if(ClkReg == 2_000_000)
+            else if(ClkReg == 20)//_000_000)
             begin
                 ClkReg <= 0;
                 ClkSig <= 0;
