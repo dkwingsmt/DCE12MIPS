@@ -1,5 +1,5 @@
 `timescale 1ns/1ps
-`include "..\alu\isa_define.v"
+`include "../alu/isa_define.v"
 
 module multicyc_alu_ctrl(iAluOp,
                         iInstOp,
