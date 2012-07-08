@@ -226,8 +226,10 @@ module multicyc_core(iClk,
     wire    [5:0]   ID_InstFunct;/*S*/
     wire    [26:0]  ID_InstJumpAddr;/*S*/
     wire    [4:0]   ID_RdRegId0;/*S*/
+    wire    [31:0]  ID_RdRegData0Origin;/*S*/
     wire    [31:0]  ID_RdRegData0;/*S*/
     wire    [4:0]   ID_RdRegId1;/*S*/
+    wire    [31:0]  ID_RdRegData1Origin;/*S*/
     wire    [31:0]  ID_RdRegData1;/*S*/
     wire    [31:0]  ID_PCJumpTgt;/*S*/
 
@@ -375,9 +377,9 @@ module multicyc_core(iClk,
         .clk    (iClk),
         .reset  (iRst_n),
         .addr1  (ID_RdRegId0),
-        .data1  (ID_RdRegData0),
+        .data1  (ID_RdRegData0Origin),
         .addr2  (ID_RdRegId1),
-        .data2  (ID_RdRegData1),
+        .data2  (ID_RdRegData1Origin),
         .addr3  (WB_WrRegId),
         .data3  (WB_WrRegData),
         .wr     (WB_RegWrite));
@@ -440,7 +442,11 @@ module multicyc_core(iClk,
     assign Flush_All = BeginInterrupt;
 
     assign ID_RdRegId0 = ID_InstRs;
+    assign ID_RdRegData0 = (WB_RegWrite & (ID_RdRegId0 == WB_WrRegId)) ? 
+                            WB_WrRegData : ID_RdRegData0Origin;
     assign ID_RdRegId1 = ID_InstRt;
+    assign ID_RdRegData1 = (WB_RegWrite & (ID_RdRegId1 == WB_WrRegId)) ? 
+                            WB_WrRegData : ID_RdRegData1Origin;
     assign ID_InstOp = IFID_Inst[31:26];
     assign ID_InstRs = IFID_Inst[25:21];
     assign ID_InstRt = IFID_Inst[20:16];
