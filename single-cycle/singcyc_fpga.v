@@ -36,8 +36,8 @@ module singcyc_fpga(iClk, iRst, iSwitch, oLED, oDigi, oRstOut, oClkOut, iLEDSele
         end
     end
 
-    singcyc singcyc_inst(//.iClk(ClkReg[3]), 
-                         .iClk(ClkSig),
+    singcyc singcyc_inst(.iClk(ClkReg[3]), 
+                         //.iClk(ClkSig),
                          .iRst_n(~iRst),
                          .iSwitch(iSwitch),
                          .oLED(LEDOrigin),
