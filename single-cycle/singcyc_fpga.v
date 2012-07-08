@@ -11,21 +11,28 @@ module singcyc_fpga(iClk, iRst, iSwitch, oLED, oDigi, oRstOut, oClkOut, iLEDSele
     wire    [7:0]   LEDOrigin;
     wire    [31:0]   PC;
     
-    reg [3:0] ClkRegDec;
+    reg [31:0] ClkReg;
+    reg        ClkSig;
     always @(posedge iClk or posedge iRst)
     begin
         if(iRst)
         begin
-            ClkRegDec <= 4'b0;
+            ClkReg <= 0;
         end
         else
         begin
-            if(ClkRegDec == 4'b0100)
-                ClkRegDec <= 4'b1000;
-            else if(ClkRegDec == 4'b1100)
-                ClkRegDec <= 4'b0000;
+            if(ClkReg == 10)//_000_000)
+            begin
+                ClkSig <= 1;
+                ClkReg <= ClkReg + 1;
+            end
+            else if(ClkReg == 20)//_000_000)
+            begin
+                ClkReg <= 0;
+                ClkSig <= 0;
+            end
             else
-                ClkRegDec <= ClkRegDec + 1;
+                ClkReg <= ClkReg + 1;
         end
     end
     
@@ -55,7 +62,8 @@ module singcyc_fpga(iClk, iRst, iSwitch, oLED, oDigi, oRstOut, oClkOut, iLEDSele
     end
 
 
-    singcyc singcyc_inst(.iClk(ClkRegDec[3]), 
+    singcyc singcyc_inst(.iClk(ClkReg[3]), 
+                         //.iClk(ClkSig),
                          .iRst_n(~iRst),
                          .iSwitch(iSwitch),
                          .oLED(LEDOrigin),

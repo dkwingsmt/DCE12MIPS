@@ -11,14 +11,8 @@ reg [31:0] RF_DATA[31:1];
 integer i;
 
 assign data1=(addr1==5'b0)?32'b0:	//$0 MUST be all zeros
-`ifndef SINGCYC
-             ((addr1==addr3)&wr)?data3:
-`endif
              RF_DATA[addr1];
 assign data2=(addr2==5'b0)?32'b0:	//$0 MUST be all zeros
-`ifndef SINGCYC
-             ((addr2==addr3)&wr)?data3:
-`endif
              RF_DATA[addr2];
 
 always@(negedge reset or posedge clk) begin

@@ -8,14 +8,14 @@ module top();
     reg  [7:0]  switch;
     initial
     begin
-        switch = 8'hff;
+        switch = 8'hfc;
         Clk = 0;
         iRst_n = 1;
         @(posedge Clk)
         iRst_n = 0;
         @(negedge Clk)
         iRst_n = 1;
-        #20000 switch = 8'hc9;
+        #20000 switch = 8'hcc;
     end
 
     always
@@ -32,7 +32,7 @@ module top();
         $dumpfile("v.lxt");
         $dumpvars(0, top);
 
-        #70000
+        #100000
 
         $dumpflush;
         $stop;
