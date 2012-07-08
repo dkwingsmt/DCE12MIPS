@@ -3,6 +3,7 @@
 ######################################################################
 # Tool settings
 IVERILOG_EXE = iverilog
+OTHER_IVERILOG_OPT = -Wall
 VVP_EXE = vvp
 GTKWAVE_EXE = gtkwave
 VVP_PREFLAGS = -n
@@ -11,8 +12,36 @@ WAVEFILE_POSTFIX = .lxt
 
 ######################################################################
 # Project settings
-VERILOG_SRCFILE = testbench.v 
-VERILOG_DEPEND = tb1.v
+PERIDIR = ../peripheral/
+ALUDIR = ../alu/
+VERILOG_SRCFILE = testbench.v multicyc.v multicyc_core.v \
+				  $(PERIDIR)rom.v \
+				  $(PERIDIR)regfile.v \
+				  $(PERIDIR)DataMem.v \
+				  $(PERIDIR)Peripheral.v \
+				  $(ALUDIR)ALU.v \
+				  $(ALUDIR)ADD.v \
+				  $(ALUDIR)AND.v \
+				  $(ALUDIR)GEZ.v \
+				  $(ALUDIR)LEZ.v \
+				  $(ALUDIR)NOR.v \
+				  $(ALUDIR)SRA.v \
+				  $(ALUDIR)STA.v \
+				  $(ALUDIR)XOR.v \
+				  $(ALUDIR)EQ.v \
+				  $(ALUDIR)GTZ.v \
+				  $(ALUDIR)LT.v \
+				  $(ALUDIR)LUI.v \
+				  $(ALUDIR)NEQ.v \
+				  $(ALUDIR)OR.v \
+				  $(ALUDIR)SLL.v \
+				  $(ALUDIR)SRL.v \
+				  $(ALUDIR)SUB.v
+VERILOG_DEPEND = tb1.v \
+				 $(PERIDIR)DataMemInit.v \
+				 $(PERIDIR)_SelectTest.v \
+				 $(PERIDIR)InstRom.v \
+				 $(ALUDIR)isa_define.v 
 COMPILE_DST = v.out
 SIMULATE_OUTPUT = v.lxt
 SIMULATE_POSTFIX = .lxt
@@ -42,7 +71,7 @@ endif
 	$(GTKWAVE_EXE) $(WAVE_DST)
 
 $(COMPILE_DST) : $(VERILOG_SRCFILE) $(VERILOG_DEPEND)
-	$(IVERILOG_EXE) -o $(COMPILE_DST) $(VERILOG_SRCFILE)
+	$(IVERILOG_EXE) $(OTHER_IVERILOG_OPT) -o $(COMPILE_DST) $(VERILOG_SRCFILE)
 
 $(SIMULATE_OUTPUT) : $(COMPILE_DST)
 	$(VVP_EXE) $(VVP_PREFLAGS) $(COMPILE_DST) $(VVP_POSTFLAGS)

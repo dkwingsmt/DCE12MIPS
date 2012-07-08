@@ -10,3 +10,4 @@ install_manifest.txt
 *.gch
 *.lxt
 *.out
+tags
