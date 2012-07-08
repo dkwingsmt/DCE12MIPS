@@ -38,9 +38,9 @@ module ALU( iA, iB, iALUFun, iSign, oS, oZ, oV, oN);
 
     `define oLUI (6'b011011)
 
-            ADD ADD1(.A(iA), .B(iB), .Sign(iSign), .S(oSadd),
+            ADD_BACKUP ADD1(.A(iA), .B(iB), .Sign(iSign), .S(oSadd),
                      .Z(oZadd), .V(oVadd), .N(oNadd));
-            SUB SUB1(.A(iA), .B(iB), .Sign(iSign), .S(oSsub),
+            SUB_BACKUP SUB1(.A(iA), .B(iB), .Sign(iSign), .S(oSsub),
                      .Z(oZsub), .V(oVsub), .N(oNsub));
             AND AND1(.A(iA), .B(iB), .Sign(iSign), .S(oSand),
                      .Z(oZand), .V(oVand), .N(oNand));
@@ -58,9 +58,9 @@ module ALU( iA, iB, iALUFun, iSign, oS, oZ, oV, oN);
                      .Z(oZsrl), .V(oVsrl), .N(oNsrl));
             SRA SRA1(.A(iA), .B(iB), .Sign(iSign), .S(oSsra),
                      .Z(oZsra), .V(oVsra), .N(oNsra));
-            EQ EQ1(.A(iA), .B(iB), .Sign(iSign), .S(oSeq),
+            EQ_BACKUP EQ1(.A(iA), .B(iB), .Sign(iSign), .S(oSeq),
                      .Z(oZeq), .V(oVeq), .N(oNeq));
-            NEQ NEQ1(.A(iA), .B(iB), .Sign(iSign), .S(oSneq),
+            NEQ_BACKUP NEQ1(.A(iA), .B(iB), .Sign(iSign), .S(oSneq),
                      .Z(oZneq), .V(oVneq), .N(oNneq));
             LT LT1(.A(iA), .B(iB), .Sign(iSign), .S(oSlt),
                      .Z(oZlt), .V(oVlt), .N(oNlt));
