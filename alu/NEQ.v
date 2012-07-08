@@ -35,7 +35,7 @@ module NEQ_BACKUP( A, B, Sign, S, Z, V, N);
     output reg N;
 
     wire   [31:0] temp;
-    eq u1(a,b,temp);
+    eq u1(A,B,temp);
     assign S = 32'b1&(~temp);
 
     always@(*)
