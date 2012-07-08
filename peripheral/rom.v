@@ -19,7 +19,7 @@ module ROM (addr,data,accessable);
                 accessable = 1'b1;
                 case(addr[7:2])
                     6'h00:      data = 32'h3c110040;   // lui $17, 0x0040
-                    6'h01:      data = 32'h08100053;   // addiu $17, 0
+                    6'h01:      data = 32'h08100055;   // addiu $17, 0
                     6'h02:      data = 32'h02200008;   // jr $17
                     default: accessable = 1'b0;
                 endcase

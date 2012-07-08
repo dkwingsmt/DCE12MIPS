@@ -38,6 +38,6 @@ module multicyc_fpga(iClk, iRst, iSwitch, oLED, oDigi, oRstOut, oClkOut, iLEDSel
 								 
     assign oRstOut = iRst;
     assign oClkOut = iClk;
-    assign oLED = iLEDSelect ? PC[7:0]
+    assign oLED = ~iLEDSelect ? PC[9:2]
                              : LEDOrigin;
 endmodule
