@@ -18,47 +18,36 @@ module ADD(A,B,Sign,S,Z,V,N);
     always@(*)
     begin
         S = A + B;
-        if (S == 0) Z = 1;
-        else Z = 0;
         if (~Sign)
         begin
             V = ((S < A) || (S < B));
-            N = 0;
         end
         else
         begin
             if ((A[31] == 0) && (B[31] == 0))
             begin
-                S = A + B;
-                if (S == 0) Z = 1;
-                else Z = 0;
                 if (S[31] == 1) 
 					 begin
 					    V = 1;
-						 N = 1;
 					 end
                 else 
 					 begin
 					    V = 0;
-						 N = 0;
 					 end
             end
             else if (A[31] != B[31])
             begin
                 V = 0;
-                N = (S[31] == 1);
             end
             else
             begin
                 if (S[31] == 0)
                 begin
                     V = 1;
-                    N = 0;
                 end
                 else
                 begin
                     V = 0;
-                    N = 1;
                 end
             end
         end
