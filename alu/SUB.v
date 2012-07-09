@@ -23,7 +23,6 @@ module SUB( A, B, Sign, S, V );
             if ((A[31] == B[31]))
             begin
                 V = 0;
-                S = A - B;
             end
             else
             begin
@@ -56,27 +55,21 @@ endmodule
 
 
 
-module SUB_BACKUP( A, B, Sign, S, Z, V, N );
+module SUB_BACKUP( A, B, Sign, S, V );
     input [31:0] A;
     input [31:0] B;
     input Sign;
 
     output [31:0] S;
-    output reg Z;
     output reg V;
-    output reg N;
 
     reg [31:0] tempA,tempB;
     sub u1(A,B,S);
 
     always@(*)
     begin
-    //    S = A - B;
-        if (S == 0) Z = 1;
-        else Z = 0;
         if (~Sign)
         begin
-            N = 0;
             V = S[31];
         end
         else
@@ -84,12 +77,6 @@ module SUB_BACKUP( A, B, Sign, S, Z, V, N );
             if ((A[31] == B[31]))
             begin
                 V = 0;
-                N = S[31] ;
-      //          S = A - B;
-                if (S == 0) Z = 1;
-                else Z = 0;
-            //    if (A < B) N = 1;
-            //    else N = 0;
             end
             else
             begin
@@ -98,12 +85,10 @@ module SUB_BACKUP( A, B, Sign, S, Z, V, N );
                     if (S[31] == 0)
                     begin
                         V = 1;
-                        N = 0;
                     end
                     else
                     begin
                         V = 0;
-                        N = 1;
                     end
                 end
                 else
@@ -111,12 +96,10 @@ module SUB_BACKUP( A, B, Sign, S, Z, V, N );
                     if (S[31] == 1)
                     begin
                         V = 1;
-                        N = 1;
                     end
                     else
                     begin
                         V = 0;
-                        N = 0;
                     end
                 end
             end

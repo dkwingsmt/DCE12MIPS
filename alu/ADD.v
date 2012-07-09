@@ -54,16 +54,14 @@ module ADD(A,B,Sign,S,Z,V,N);
     end
 endmodule
 
-module ADD_BACKUP(A,B,Sign,S,Z,V,N);
+module ADD_BACKUP(A,B,Sign,S,V);
 
     input [31:0] A;
     input [31:0] B;
     input Sign;
 
     output [31:0] S;
-    output reg Z;
     output reg V;
-    output reg N;
 
     reg [31:0] tempA,tempB;
     
@@ -73,10 +71,6 @@ module ADD_BACKUP(A,B,Sign,S,Z,V,N);
     begin
         if (~Sign)
         begin
-           // S = A + B;
-            N = 0;
-            if (S == 0) Z = 1;
-            else Z = 0;
             if ((S < A) || (S < B)) V = 1;
             else V = 0;
         end
@@ -84,45 +78,21 @@ module ADD_BACKUP(A,B,Sign,S,Z,V,N);
         begin
             if ((A[31] == 0) && (B[31] == 0))
             begin
-             //   S = A + B;
-                if (S == 0) Z = 1;
-                else Z = 0;
                 if (S[31] == 1) 
 					 begin
 					    V = 1;
-						 N = 1;
 					 end
                 else 
 					 begin
 					    V = 0;
-						 N = 0;
 					 end
             end
             else if (A[31] != B[31])
             begin
                 V = 0;
-               // S = A + B;
-                if (S == 0) Z = 1;
-                else Z = 0;
-                if (A[31])
-                begin
-                    tempA = A * (-1);
-                    if (tempA > B) N = 1;
-                    else N = 0;
-                end
-                else
-                begin
-                    tempB = B * (-1);
-                    if (tempB > A) N = 1;
-                    else N = 0;
-                end
             end
             else
             begin
-                N = 1;
-               // S = A + B;
-                if (S == 0) Z = 1;
-                else Z = 0;
                 if (S[31] == 0) V = 1;
                 else V = 0;
             end
