@@ -19,36 +19,15 @@ addi $11,$0,30
 addi $12,$0,-31
 addi $13,$0,-3
 addi $14,$0,1
-beq $2,$3,error
 beq $2,$2,next1
-j error
 next1:
-bne $2,$2,error
 bne $2,$3,next2
-j error
 next2:
-blez $2,error
-blez $0,next3
-j error
-next3:
-blez $6,next4
-j error
-next4:
-bgtz $6,error
-bgtz $0,error
-bgtz $2,next5
-j error
-next5:
 la $4,next
 jr $4
 
 
 error:
-add $22,$3,$3
-nor $2,$0,$0
-sll $2,$2,6
-la $3, 0x40000010
-sw $2, ($3)
 j finish
 
 next:
@@ -113,15 +92,7 @@ beq $16,$4,end
 
 finish:
 add $25,$2,$2
-LOOP1:
-add $25,$0,$25
-j LOOP1
 
 end:
 add $22,$3,$3
-nor $2,$0,$0
-srl $2,$2,28
-la $3, 0x40000010
-sw $2, ($3)
-j LOOP1
 
