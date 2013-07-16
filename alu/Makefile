@@ -11,7 +11,7 @@ WAVEFILE_POSTFIX = .lxt
 
 ######################################################################
 # Project settings
-VERILOG_SRCFILE = ALU.v tb_ALU.v ADD.v SUB.v AND.v OR.v XOR.v NOR.v STA.v SLL.v SRL.v SRA.v EQ.v NEQ.v LT.v LEZ.v GEZ.v GTZ.v
+VERILOG_SRCFILE = ALU.v tb_ALU.v ADD.v SUB.v AND.v OR.v XOR.v NOR.v STA.v SLL.v SRL.v SRA.v EQ.v NEQ.v LT.v LEZ.v GEZ.v GTZ.v LUI.v
 COMPILE_DST = test 
 SIMULATE_OUTPUT = test.lxt
 SIMULATE_POSTFIX = .lxt

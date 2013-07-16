@@ -65,6 +65,8 @@ module multicyc_alu_ctrl(iAluOp,
             `OPCODE_SLTI:   begin oAluCtrl = `ALUCTRL_LT;   oSign = 1'b1; end    
             `OPCODE_SLTIU:  begin oAluCtrl = `ALUCTRL_LT;   oSign = 1'b0; end   
             `OPCODE_LUI:    oAluCtrl = `ALUCTRL_LUI;
+            `OPCODE_BLEZ:   begin oAluCtrl = `ALUCTRL_LEZ;  oSign = 1'b1; end
+            `OPCODE_BGTZ:   begin oAluCtrl = `ALUCTRL_LEZ;  oSign = 1'b1; end
             endcase
             end
         endcase
@@ -76,7 +78,7 @@ module multicyc_ctrl_unit(  iOpCode,
                             oJump,       
                             oJLink,       
                             oBranch,
-                            oBranchEq,
+                            oBranchOpt,
                             oMemRead,
                             oMemWrite,
                             oMemtoReg,
@@ -90,7 +92,8 @@ module multicyc_ctrl_unit(  iOpCode,
     output  reg         oJump;      // Do jump if !branch : N/A
     output  reg         oJLink;     // Addr of jump from (RegRead0 : InstJumpAddr)
     output  reg         oBranch;    // Try branch : N/A
-    output  reg         oBranchEq;  // Do branch if (A == B : A != B) if branch
+    output  reg [1:0]   oBranchOpt; // 0*: Do branch if (A != B : A == B) if branch
+                                    // 1*: Do branch if (A > 0 : A <= 0) if branch 
     output  reg         oMemRead;   // Read data mem : N/A
     output  reg         oMemWrite;  // Write data mem : N/A
     output  reg         oMemtoReg;  // Data to write to reg from (mem : ALU) if write
@@ -103,7 +106,7 @@ module multicyc_ctrl_unit(  iOpCode,
         // Default: 
         // Undefined ALU behaviour. No jump, no branch.
         // No memread/write, no regwrite.
-            oBranch = 1'b0;    oBranchEq = 1'bx;  
+            oBranch = 1'b0;    oBranchOpt = 1'bx;  
             oJump = 1'b0;      oJLink = 1'b0;
             oALUSrc = 1'bx;    oALUOp = 2'bxx;
             oRegWrite = 1'b0;  oRegDst = 1'bx;    oMemtoReg = 1'bx;    
@@ -160,12 +163,20 @@ module multicyc_ctrl_unit(  iOpCode,
             `CTRL_ISTYLE_BEHAVIOUR
         end
         `OPCODE_BEQ: begin
-            oBranch = 1'b1;    oBranchEq = 1'b1;  oJump = 1'b0;
+            oBranch = 1'b1;    oBranchOpt = 2'b00;  oJump = 1'b0;
             oALUSrc = 1'b0;    oALUOp = 2'b01;
         end
         `OPCODE_BNE: begin
-            oBranch = 1'b1;    oBranchEq = 1'b0;  oJump = 1'b0;
+            oBranch = 1'b1;    oBranchOpt = 2'b01;  oJump = 1'b0;
             oALUSrc = 1'b0;    oALUOp = 2'b01;
+        end
+        `OPCODE_BLEZ: begin
+            oBranch = 1'b1;    oBranchOpt = 2'b10; oJump = 1'b0;
+            oALUSrc = 1'b0;    oALUOp = 2'b11;
+        end
+        `OPCODE_BGTZ: begin
+            oBranch = 1'b1;    oBranchOpt = 2'b11; oJump = 1'b0;
+            oALUSrc = 1'b0;    oALUOp = 2'b11;
         end
         `OPCODE_J: begin
             oJump = 1'b1;      oJLink = 1'b0;
@@ -237,7 +248,7 @@ module multicyc_core(iClk,
     wire            ID_CtrlJump;/*S*/
     wire            ID_CtrlJLink;/*S*/
     wire            ID_CtrlBranch;/*S*/
-    wire            ID_CtrlBranchEq;/*S*/
+    wire    [1:0]   ID_CtrlBranchOpt;/*S*/
     wire            ID_CtrlMemRead;/*S*/
     wire            ID_CtrlMemWrite;/*S*/
     wire            ID_CtrlMemtoReg;/*S*/
@@ -255,7 +266,7 @@ module multicyc_core(iClk,
     reg     [31:0]  IDEX_Inst;/*S*/
     //reg     [9:0]   IDEX_CtrlWb;/*S*/
     reg     [2:0]   IDEX_CtrlMem;/*S*/
-    reg     [9:0]   IDEX_CtrlEx;/*S*/
+    reg     [10:0]  IDEX_CtrlEx;/*S*/
     reg     [31:0]  IDEX_RdRegData0;/*S*/
     reg     [31:0]  IDEX_RdRegData1;/*S*/
     reg     [31:0]  IDEX_PCJumpTgt;/*S*/
@@ -293,7 +304,7 @@ module multicyc_core(iClk,
     wire    [1:0]   EX_CtrlALUOp;/*S*/
     wire            EX_CtrlMemtoReg;/*S*/
     wire            EX_CtrlBranch;/*S*/
-    wire            EX_CtrlBranchEq;/*S*/
+    wire    [1:0]   EX_CtrlBranchOpt;/*S*/
     wire            EX_CtrlJump;/*S*/
     wire            EX_CtrlJLink;/*S*/
 
@@ -390,7 +401,7 @@ module multicyc_core(iClk,
         .oJump      (ID_CtrlJump),       
         .oJLink     (ID_CtrlJLink),       
         .oBranch    (ID_CtrlBranch),
-        .oBranchEq  (ID_CtrlBranchEq),
+        .oBranchOpt (ID_CtrlBranchOpt),
         .oMemRead   (ID_CtrlMemRead),
         .oMemWrite  (ID_CtrlMemWrite),
         .oMemtoReg  (ID_CtrlMemtoReg),
@@ -454,13 +465,13 @@ module multicyc_core(iClk,
     assign ID_InstJumpAddr = IFID_Inst[25:0];
     assign ID_PCJumpTgt = {IFID_PCAddFour[31:28], ID_InstJumpAddr, 2'b00};
 
-    assign EX_CtrlRegDst    = IDEX_CtrlEx[9];
-    assign EX_CtrlRegWrite  = IDEX_CtrlEx[8];
-    assign EX_CtrlALUSrc    = IDEX_CtrlEx[7];
-    assign EX_CtrlALUOp     = IDEX_CtrlEx[6:5];
-    assign EX_CtrlMemtoReg  = IDEX_CtrlEx[4];
-    assign EX_CtrlBranch    = IDEX_CtrlEx[3];
-    assign EX_CtrlBranchEq  = IDEX_CtrlEx[2];
+    assign EX_CtrlRegDst    = IDEX_CtrlEx[10];
+    assign EX_CtrlRegWrite  = IDEX_CtrlEx[9];
+    assign EX_CtrlALUSrc    = IDEX_CtrlEx[8];
+    assign EX_CtrlALUOp     = IDEX_CtrlEx[7:6];
+    assign EX_CtrlMemtoReg  = IDEX_CtrlEx[5];
+    assign EX_CtrlBranch    = IDEX_CtrlEx[4];
+    assign EX_CtrlBranchOpt = IDEX_CtrlEx[3:2];
     assign EX_CtrlJump      = IDEX_CtrlEx[1];
     assign EX_CtrlJLink     = IDEX_CtrlEx[0];
 
@@ -488,7 +499,7 @@ module multicyc_core(iClk,
     assign EX_Link = EX_CtrlJLink | IDEX_CtrlJRLink;
     assign EX_PCBranchOffset = {{14{EX_InstImmediate[15]}}, 
                                 EX_InstImmediate, 2'b00};
-    assign EX_TakeBranch = EX_CtrlBranch & ~(EX_CtrlBranchEq ^ EX_AluZero);
+    assign EX_TakeBranch = EX_CtrlBranch & (^EX_CtrlBranchOpt ^ EX_AluZero);
     //assign EX_PCNext = EX_TakeBranch ? EX_PCBranchTgt :
                                    //IDEX_PCAddFour;
     assign EX_FalseBranch = EX_TakeBranch;      // Plz always make sure & CtrlBranch
@@ -681,7 +692,7 @@ module multicyc_core(iClk,
                                 ID_CtrlALUOp,
                                 ID_CtrlMemtoReg,
                                 ID_CtrlBranch,
-                                ID_CtrlBranchEq,
+                                ID_CtrlBranchOpt,
                                 ID_CtrlJump,
                                 ID_CtrlJLink
                                 };

@@ -28,6 +28,8 @@
 `define OPCODE_SLTIU        6'h0b
 `define OPCODE_BEQ          6'h04
 `define OPCODE_BNE          6'h05
+`define OPCODE_BGTZ         6'h07
+`define OPCODE_BLEZ         6'h06
 `define OPCODE_J            6'h02
 `define OPCODE_JAL          6'h03
 `define  FUNCT_JR           6'h08

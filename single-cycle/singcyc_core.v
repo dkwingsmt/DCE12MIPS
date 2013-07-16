@@ -68,6 +68,8 @@ module singcyc_alu_ctrl(iAluOp,
             `OPCODE_SLTI:   begin oAluCtrl = `ALUCTRL_LT;   oSign = 1'b1; end    
             `OPCODE_SLTIU:  begin oAluCtrl = `ALUCTRL_LT;   oSign = 1'b0; end   
             `OPCODE_LUI:    oAluCtrl = `ALUCTRL_LUI;
+            `OPCODE_BLEZ:   begin oAluCtrl = `ALUCTRL_LEZ;  oSign = 1'b1; end
+            `OPCODE_BGTZ:   begin oAluCtrl = `ALUCTRL_LEZ;  oSign = 1'b1; end
             endcase
             end
         endcase
@@ -79,7 +81,7 @@ module singcyc_ctrl_unit(   iOpCode,
                             oJump,       
                             oJLink,       
                             oBranch,
-                            oBranchEq,
+                            oBranchOpt,
                             oMemRead,
                             oMemWrite,
                             oMemtoReg,
@@ -93,7 +95,8 @@ module singcyc_ctrl_unit(   iOpCode,
     output  reg         oJump;      // Do jump if !branch : N/A
     output  reg         oJLink;     // Addr of jump from (RegRead0 : InstJumpAddr)
     output  reg         oBranch;    // Try branch : N/A
-    output  reg         oBranchEq;  // Do branch if (A == B : A != B) if branch
+    output  reg [1:0]   oBranchOpt; // 0*: Do branch if (A != B : A == B) if branch
+                                    // 1*: Do branch if (A > 0 : A <= 0) if branch
     output  reg         oMemRead;   // Read data mem : N/A
     output  reg         oMemWrite;  // Write data mem : N/A
     output  reg         oMemtoReg;  // Data to write to reg from (mem : ALU) if write
@@ -106,7 +109,7 @@ module singcyc_ctrl_unit(   iOpCode,
         // Default: 
         // Undefined ALU behaviour. No jump, no branch.
         // No memread/write, no regwrite.
-            oBranch = 1'b0;    oBranchEq = 1'bx;  
+            oBranch = 1'b0;    oBranchOpt = 1'bx;  
             oJump = 1'b0;      oJLink = 1'b0;
             oALUSrc = 1'bx;    oALUOp = 2'bxx;
             oRegWrite = 1'b0;  oRegDst = 1'bx;    oMemtoReg = 1'bx;    
@@ -163,12 +166,20 @@ module singcyc_ctrl_unit(   iOpCode,
             `CTRL_ISTYLE_BEHAVIOUR
         end
         `OPCODE_BEQ: begin
-            oBranch = 1'b1;    oBranchEq = 1'b1;  oJump = 1'b0;
+            oBranch = 1'b1;    oBranchOpt = 2'b00; oJump = 1'b0;
             oALUSrc = 1'b0;    oALUOp = 2'b01;
         end
         `OPCODE_BNE: begin
-            oBranch = 1'b1;    oBranchEq = 1'b0;  oJump = 1'b0;
+            oBranch = 1'b1;    oBranchOpt = 2'b01; oJump = 1'b0;
             oALUSrc = 1'b0;    oALUOp = 2'b01;
+        end
+        `OPCODE_BLEZ: begin
+            oBranch = 1'b1;    oBranchOpt = 2'b10; oJump = 1'b0;
+            oALUSrc = 1'b0;    oALUOp = 2'b11;
+        end
+        `OPCODE_BGTZ: begin
+            oBranch = 1'b1;    oBranchOpt = 2'b11; oJump = 1'b0;
+            oALUSrc = 1'b0;    oALUOp = 2'b11;
         end
         `OPCODE_J: begin
             oJump = 1'b1;      oJLink = 1'b0;
@@ -249,7 +260,7 @@ module singcyc_core(iClk,
     wire            CtrlJLink;       
     wire            CtrlJRLink;       
     wire            CtrlBranch;
-    wire            CtrlBranchEq;
+    wire    [1:0]   CtrlBranchOpt;
     wire            CtrlMemRead;
     wire            CtrlMemWrite;
     wire            CtrlMemtoReg;
@@ -266,7 +277,7 @@ module singcyc_core(iClk,
     wire    [31:0]  PCJumpTgt;
     wire    [31:0]  PCNextRaw;
     wire    [31:0]  PCNext;
-    wire            DoBranch;
+    wire            TakeBranch;
     wire            Link;
     wire            BeginInterrupt;
 
@@ -303,7 +314,7 @@ module singcyc_core(iClk,
         .oJump      (CtrlJump),       
         .oJLink     (CtrlJLink),       
         .oBranch    (CtrlBranch),
-        .oBranchEq  (CtrlBranchEq),
+        .oBranchOpt (CtrlBranchOpt),
         .oMemRead   (CtrlMemRead),
         .oMemWrite  (CtrlMemWrite),
         .oMemtoReg  (CtrlMemtoReg),
@@ -358,7 +369,7 @@ module singcyc_core(iClk,
                     RdRegData0;
     assign AluIn1 = CtrlALUSrc ? IStyleAluSrc1 : 
                     RdRegData1;
-    assign DoBranch = CtrlBranch & ~(CtrlBranchEq ^ AluZero);
+    assign TakeBranch = CtrlBranch & ((^CtrlBranchOpt) ^ AluZero);
 
     assign oRdWrMemAddr = AluOut;
     assign oWrData = RdRegData1;
@@ -367,7 +378,7 @@ module singcyc_core(iClk,
     assign oRdInstAddr = PC;
 
     assign PCNextRaw  = BeginInterrupt ? `INTERRUPT_PC :
-                        DoBranch ? PCBranchTgt :
+                        TakeBranch ? PCBranchTgt :
                         CtrlJump ? PCJumpTgt :
                         CtrlJR ? RdRegData0 : 
                                PCAddFour;
